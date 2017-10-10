@@ -32,10 +32,10 @@ License: GPLv3
 ```
 # Example output:
 
-Chromatiblock outputs two images. The first figure (top) shows the topology of core and noncore colinear blocks in each genome. Core co-linear blocks present in all isolate genomes are aligned vertically and shown as solid rectangles. They are colored according to the block location in each genome to highlight inversions (legend at bottom). Non-core regions, present in only a subset of genomes, are each represented with a unique striped fill pattern.
+Chromatiblock outputs two figures. The first figure (top) shows the topology of core and noncore colinear blocks in each genome. Core co-linear blocks present in all isolate genomes are aligned vertically and shown as solid rectangles. They are colored according to the block location in each genome to highlight inversions (legend at bottom). Non-core regions, present in only a subset of genomes, are each represented with a unique striped fill pattern.
 
 The second figure (bottom) shows the presence and absence of non-core colinear blocks. Non-core colinear blocks are enlarged and aligned on top of one another. Absense of a block indicates absense in the respective genome.
 
 ![chromatiblock](https://raw.githubusercontent.com/mjsull/chromatiblock/gh-pages/images/chromatiblock_main.gif)
 
-Example of chromatiblock output. 
+For the scripts used to generate the figures in the study "Colonizing and infecting subclones diverge during Staphylococcus aureus infection." please goto the mssa-paper branch. n.b. These scripts contain a lot of hardcoded information specific to the project and as should only be used to reproduce the initial study.
