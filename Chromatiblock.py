@@ -1,133 +1,104 @@
-#!/usr/bin/env python
-# Chromatiblock.py   Written by: Mitchell Sullivan   mjsull@gmail.com
-# Supervisor: Dr. Harm Van Bakel
-# Version 0.1.0 2017.10.09
-# License: GPLv3
-
 import os
 import subprocess
 import sys
 import argparse
+from itertools import groupby
+import string
+
+# write fasta files to
+
 
 def colorstr(rgb): return "#%02x%02x%02x" % (rgb[0],rgb[1],rgb[2])
 
 
-color_list = [(240,163,255),(0,117,220),(153,63,0),(76,0,92),(25,25,25),(0,92,49),(43,206,72),(255,204,153),(128,128,128),(148,255,181),(143,124,0),(157,204,0),(194,0,136),(0,51,128),(255,164,5),(255,168,187),(66,102,0),(255,0,16),(94,241,242),(0,153,143),(224,255,102),(116,10,255),(153,0,0),(255,255,128),(255,255,0),(255,80,5)]
+color_list = [(240,163,255), (0,117,220), (153,63,0), (76,0,92), (25,25,25), (0,92,49), (43,206,72), (255,204,153),
+              (128,128,128), (148,255,181), (143,124,0), (157,204,0), (194,0,136), (0,51,128), (255,164,5),
+              (255,168,187), (66,102,0), (255,0,16), (94,241,242), (0,153,143), (224,255,102), (116,10,255),
+              (153,0,0), (255,255,128), (255,255,0), (255,80,5)]
 #pattern_list = ['circ_small', 'circ_large', 'diag_small', 'diag_large', 'dots_small', 'dots_large', 'horiz_small', 'horiz_large', 'vert_small', 'vert_large', 'cross_hatch']
 pattern_list = ['horizontal', 'forward_diag', 'reverse_diag']
 
 
-def hsl_to_rgb(h, s, l):
-    c = (1 - abs(2*l - 1)) * s
-    x = c * (1 - abs(h *1.0 / 60 % 2 - 1))
-    m = l - c/2
-    if h < 60:
-        r, g, b = c + m, x + m, 0 + m
-    elif h < 120:
-        r, g, b = x + m, c+ m, 0 + m
-    elif h < 180:
-        r, g, b = 0 + m, c + m, x + m
-    elif h < 240:
-        r, g, b, = 0 + m, x + m, c + m
-    elif h < 300:
-        r, g, b, = x + m, 0 + m, c + m
-    else:
-        r, g, b, = c + m, 0 + m, x + m
-    r = int(r * 255)
-    g = int(g * 255)
-    b = int(b * 255)
-    return (r,g,b)
 
-def binar(s):
-  transdict = {'0':'0000',
-               '1':'0001',
-               '2':'0010',
-               '3':'0011',
-               '4':'0100',
-               '5':'0101',
-               '6':'0110',
-               '7':'0111',
-               '8':'1000',
-               '9':'1001',
-               'a':'1010',
-               'b':'1011',
-               'c':'1100',
-               'd':'1101',
-               'e':'1110',
-               'f':'1111'
-  }
-  outstring = ''
-  for i in s:
-    outstring += transdict[i]
-  return outstring
 
-class scalableVectorGraphics:
+class scalableVectorGraphicsHTML:
 
-    def __init__(self, height, width):
+    def __init__(self, height, width, svg=True):
         self.height = height
         self.width = width
-        self.out = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="%d"
-   width="%d"
-   id="svg2"
-   version="1.1"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="easyfig">
-  <metadata
-     id="metadata122">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>Easyfig</dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs
-     id="defs120" />
-  <sodipodi:namedview
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="640"
-     inkscape:window-height="480"
-     id="namedview118"
-     showgrid="false"
-     inkscape:zoom="0.0584"
-     inkscape:cx="2500"
-     inkscape:cy="75.5"
-     inkscape:window-x="55"
-     inkscape:window-y="34"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
-  <title
-     id="title4">Easyfig</title>
-  <g
-     style="fill-opacity:1.0; stroke:black; stroke-width:1;"
-     id="g6">''' % (self.height, self.width)
+        if svg:
+            self.out = ''
+        else:
+            self.out = '<!DOCTYPE html>\n' + \
+    '<html>\n' + \
+    '  <head>\n' + \
+    '    <script src="http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>\n' + \
+    '  </head>\n' + \
+    '  <body>\n' + \
+    '    <h1>Chromatiblock demo</h1>\n' + \
+    '    <div id="container" style="width: 100%; height: 1500px; border:0px solid black; ">\n'
+        self.out += '      <svg id="demo-tiger" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
+'                   max-width: inherit; height: inherit; min-height: inherit; max-height: inherit; " viewBox="0 0 %d %d" version="1.1">\n' % (width, height) + \
+'        <style>\n' + \
+'            .bar {\n' + \
+'        stroke-width:3;\n' + \
+'        opacity:1;\n' + \
+'    }\n' + \
+'            .bar:hover {\n' + \
+'        stroke-width:20;\n' + \
+'        opacity:1;\n' + \
+'    }\n' + \
+'        </style>\n' \
+'<g>\n'
+
 
     def drawLine(self, x1, y1, x2, y2, th=1, cl=(0, 0, 0)):
         self.out += '  <line x1="%d" y1="%d" x2="%d" y2="%d"\n        stroke-width="%d" stroke="%s" />\n' % (x1, y1, x2, y2, th, colorstr(cl))
 
-    def writesvg(self, filename):
-        outfile = open(filename, 'w')
-        outfile.write(self.out + ' </g>\n</svg>')
-        outfile.close()
+    def writesvg(self, filename, svg=True):
+        with open(filename, 'w') as outfile:
+            outfile.write(self.out)
+            if svg:
+                outfile.write('</g></svg>')
+            else:
+                outfile.write('''</g>      </svg>
+    </div>
+    <button id="enable">enable</button>
+    <button id="disable">disable</button>
+    <button id="hide">hide</button>
+    <button id="show">show</button>
+
+    <script>
+      // Don't use window.onLoad like this in production, because it can only listen to one function.
+      window.onload = function() {
+        // Expose to window namespase for testing purposes
+        window.zoomTiger = svgPanZoom('#demo-tiger', {
+          zoomEnabled: true,
+          controlIconsEnabled: true,
+          fit: true,
+          center: true,
+          maxZoom: 1000,
+          zoomScaleSensitivity: 0.5
+        });
+
+        document.getElementById('enable').addEventListener('click', function() {
+          window.zoomTiger.enableControlIcons();
+        })
+        document.getElementById('disable').addEventListener('click', function() {
+          window.zoomTiger.disableControlIcons();
+        })
+        document.getElementById('hide').addEventListener('click', function() {
+          document.getElementById("annot").style.display = "none";
+        })
+        document.getElementById('show').addEventListener('click', function() {
+          document.getElementById("annot").style.display = "block";
+        })
+      };
+    </script>
+
+  </body>
+
+</html>''')
 
     def drawRightArrow(self, x, y, wid, ht, fc, oc=(0,0,0), lt=1):
         if lt > ht /2:
@@ -195,9 +166,16 @@ class scalableVectorGraphics:
         self.out += '        x="%d" y="%d" width="%d" height="%d" />\n' % (x1, y1, wid, hei)
 
     def drawOutRect(self, x1, y1, wid, hei, fill, outfill, lt=1, alpha=1.0, alpha2=1.0):
-        self.out += '  <rect stroke="%s" stroke-width="%d" stroke-opacity="%f" stroke-alignment="inner"\n' % (colorstr(outfill), lt, alpha)
+        self.out += '  <rect stroke="%s" stroke-opacity="%f" stroke-alignment="inner"\n' % (colorstr(outfill), alpha)
         self.out += '        fill="%s" fill-opacity="%f"\n' % (colorstr(fill), alpha2)
         self.out += '        x="%d" y="%d" width="%d" height="%d" />\n' % (x1, y1, wid, hei)
+
+    def create_group(self, name, the_class='bar'):
+        self.out += '        <g id="%s" class="%s" fill="none">\n' % (name, the_class)
+
+    def close_group(self):
+        self.out += '        </g>'
+
 
     def create_pattern(self, id, fill, pattern, width, line_width):
         fill = colorstr(fill)
@@ -220,12 +198,20 @@ class scalableVectorGraphics:
             self.out += '      </pattern>\n'
             self.out += '   </defs>\n'
 
-    def drawPatternRect(self, x, y, width, height, id, fill, lt):
+    def drawPatternRect(self, x, y, width, height, id, fill, lt=1):
         fill = colorstr(fill)
-        self.out += '  <rect style="fill:#FFFFFF; stroke: %s; stroke-width: %d; stroke-alignment: inner;"\n' % (fill, lt)
+        self.out += '  <rect style="fill:#FFFFFF; stroke: %s; stroke-alignment: inner;"\n' % fill
         self.out += '        x="%d" y="%d" width="%d" height="%d" />\n' % (x, y, width, height)
-        self.out += '  <rect style="fill:url(#%s); stroke: %s; stroke-width: %d; stroke-alignment: inner;"\n' % (id, fill, lt)
+        self.out += '  <rect style="fill:url(#%s); stroke: %s; stroke-alignment: inner;"\n' % (id, fill)
         self.out += '        x="%d" y="%d" width="%d" height="%d" />\n' % (x, y, width, height)
+
+
+    def drawPath(self, xcoords, ycoords, th=1, cl=(0, 0, 0), alpha=0.9):
+        self.out += '  <path d="M%d %d' % (xcoords[0], ycoords[0])
+        for i in range(1, len(xcoords)):
+            self.out += ' L%d %d' % (xcoords[i], ycoords[i])
+        self.out += '"\n        stroke-width="%d" stroke="%s" stroke-opacity="%f" stroke-linecap="butt" fill="none" z="-1" />\n' % (th, colorstr(cl), alpha)
+
 
     def drawRightFrame(self, x, y, wid, ht, lt, frame, fill):
         if lt > ht /2:
@@ -318,6 +304,59 @@ class scalableVectorGraphics:
         self.out += '       style="stroke-dasharray: 5, 3, 9, 3"\n'
         self.out += '       stroke="#000" stroke-width="%d" />\n' % exont
 
+    def drawSymbol(self, x, y, size, fill, symbol, alpha=1.0, lt=1):
+        x0 = x - size/2
+        x1 = size/8 + x - size/2
+        x2 = size/4 + x - size/2
+        x3 = size*3/8 + x - size/2
+        x4 = size/2 + x - size/2
+        x5 = size*5/8 + x - size/2
+        x6 = size*3/4 + x - size/2
+        x7 = size*7/8 + x - size/2
+        x8 = size + x - size/2
+        y0 = y - size/2
+        y1 = size/8 + y - size/2
+        y2 = size/4 + y - size/2
+        y3 = size*3/8 + y - size/2
+        y4 = size/2 + y - size/2
+        y5 = size*5/8 + y - size/2
+        y6 = size*3/4 + y - size/2
+        y7 = size*7/8 + y - size/2
+        y8 = size + y - size/2
+        if symbol == 'o':
+            self.out += '  <circle stroke="%s" stroke-width="%d" stroke-opacity="%f"\n' % (colorstr((0, 0, 0)), lt, 1)
+            self.out += '        fill="%s" fill-opacity="%f"\n' % (colorstr(fill), alpha)
+            self.out += '        cx="%d" cy="%d" r="%d" />\n' % (x, y, size/2)
+        elif symbol == 'x':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d" />\n' % (x0, y2, x2, y0, x4, y2, x6, y0, x8, y2,
+                                                                                                                             x6, y4, x8, y6, x6, y8, x4, y6, x2, y8,
+                                                                                                                             x0, y6, x2, y4)
+        elif symbol == '+':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d %d,%d" />\n' % (x2, y0, x6, y0, x6, y2, x8, y2, x8, y6,
+                                                                                                                             x6, y6, x6, y8, x2, y8, x2, y6, x0, y6,
+                                                                                                                             x0, y2, x2, y2)
+        elif symbol == 's':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d %d,%d" />\n' % (x0, y0, x0, y8, x8, y8, x8, y0)
+        elif symbol == '^':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d %d,%d %d,%d %d,%d" />\n' % (x0, y0, x2, y0, x4, y4, x6, y0, x8, y0, x4, y8)
+        elif symbol == 'v':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d %d,%d %d,%d %d,%d" />\n' % (x0, y8, x2, y8, x4, y4, x6, y8, x8, y8, x4, y0)
+        elif symbol == 'u':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d" />\n' % (x0, y8, x4, y0, x8, y8)
+        elif symbol == 'd':
+            self.out += '  <polygon fill="%s" stroke="%s" stroke-width="%d" stroke-opacity="%f" fill-opacity="%f"\n' % (colorstr(fill), colorstr((0, 0, 0)), lt, alpha, alpha)
+            self.out += '           points="%d,%d %d,%d %d,%d" />\n' % (x0, y0, x4, y8, x8, y0)
+        else:
+            sys.stderr.write(symbol + '\n')
+            sys.stderr.write('Symbol not found, this should not happen.. exiting')
+            sys.exit()
+
     def writeString(self, thestring, x, y, size, ital=False, bold=False, rotate=0, justify='left'):
         if rotate != 0:
             x, y = y, x
@@ -358,17 +397,36 @@ class scalableVectorGraphics:
             self.out += '\nstyle="font-style:normal;font-weight:bold"'
         self.out += '>' + thestring + '</tspan></text>\n'
 
-# class of blast hit data
 
-class genome_line:
-    def __init__(self, name):
-        self.name = name
-        self.contigs = []
+def hsl_to_rgb(h, s, l):
+    c = (1 - abs(2*l - 1)) * s
+    x = c * (1 - abs(h *1.0 / 60 % 2 - 1))
+    m = l - c/2
+    if h < 60:
+        r, g, b = c + m, x + m, 0 + m
+    elif h < 120:
+        r, g, b = x + m, c+ m, 0 + m
+    elif h < 180:
+        r, g, b = 0 + m, c + m, x + m
+    elif h < 240:
+        r, g, b, = 0 + m, x + m, c + m
+    elif h < 300:
+        r, g, b, = x + m, 0 + m, c + m
+    else:
+        r, g, b, = c + m, 0 + m, x + m
+    r = int(r * 255)
+    g = int(g * 255)
+    b = int(b * 255)
+    return (r,g,b)
 
 
-def write_fasta_sibel(fasta_list, out_fasta, order_list=None):
+
+
+
+def write_fasta_sibel(fasta_list, out_fasta):
     getfa = False
     getgb = False
+    out_dict = {}
     with open(out_fasta, 'w') as out:
         for num, fasta in enumerate(fasta_list):
             with open(fasta) as f:
@@ -376,437 +434,691 @@ def write_fasta_sibel(fasta_list, out_fasta, order_list=None):
                 for line in f:
                     if line.startswith('>'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
+                        out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), line.split()[0][1:])
                         count += 1
                         getfa = True
                     elif getfa:
                         out.write(line)
+                    elif line.startswith('LOCUS '):
+                        name = line.split()[1]
                     elif line.startswith('ORIGIN'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
+                        out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), name)
                         count += 1
                         getgb = True
                     elif line.startswith('//'):
                         getgb = False
                     elif getgb:
                         out.write(''.join(line.split()[1:]) + '\n')
-
-def run_sibel(in_fasta, sibel_dir, sibelia_path, sib_mode, min_block):
-    subprocess.Popen(sibelia_path + ' -s ' + sib_mode + ' -m ' + str(min_block) + ' -o ' + sibel_dir + ' ' + in_fasta, shell=True).wait()
+    return out_dict
 
 
-def get_genome_lines(sibel_file):
-    with open(sibel_file) as f:
+# run sibelia
+def run_sibel(in_fasta, sibel_dir, sibelia_path, sib_mode, min_block, skip_sibel):
+    if not skip_sibel:
+        subprocess.Popen(sibelia_path + ' -s ' + sib_mode + ' -m ' + str(min_block) + ' -o ' + sibel_dir + ' ' + in_fasta, shell=True).wait()
+
+
+
+class block_object:
+    def __init__(self, start, strand, length, block, genes, cat):
+        self.start = start
+        self.strand = strand
+        self.length = length
+        self.block = block
+        self.genes = genes
+        self.type = None
+        self.cat = cat
+
+
+
+#def get_blocks_maf(maf_file, gene_list, cats={}):
+    
+
+def get_blocks(sibel_dir, gene_list, cats={}):
+    seq_no_dict = {}
+    length_dict = {}
+    block_dict = {}
+    block_type = {}
+    with open(sibel_dir + '/blocks_coords.txt') as f:
         f.readline()
-        block_id = None
-        is_core_dict = {}
-        max_length_dict = {}
-        seq_id_dict = {}
-        get_block_id = 0
-        no_of_chroms = 0
-        genome_lines = {}
-        len_dict = {}
-        block_dict = {}
+        get_seq_ids = True
         for line in f:
-            if line.startswith('-----'):
-                if not block_id is None:
-                    if len(chrom_set) == no_of_chroms and repeat:
-                        is_core_dict[block_id] = 'repeat'
-                    elif len(chrom_set) == no_of_chroms:
-                        is_core_dict[block_id] = 'core'
-                    else:
-                        is_core_dict[block_id] = 'noncore'
-                    max_length_dict[block_id] = max_len
-                get_block_id = 1
-                chrom_set = set()
+            if line.startswith('---') and get_seq_ids:
+                get_seq_ids = False
+            elif line.startswith('---'):
+                if repeat:
+                    block_type[block] = 'repeat'
+                elif len(in_fasta_set) == len(length_dict):
+                    block_type[block] = 'core'
+                else:
+                    block_type[block] = 'noncore'
+            elif get_seq_ids:
+                seq_id, length, header = line.split()
+                fasta, contig = header.split('_')
+                if not fasta in length_dict:
+                    length_dict[fasta] = {}
+                    block_dict[fasta] = {}
+                length_dict[fasta][contig] = int(length)
+                block_dict[fasta][contig] = []
+                seq_no_dict[seq_id] = (fasta, contig)
+            elif line.startswith('Seq_id'):
+                pass
+            elif line.startswith('Block'):
+                block = line.split()[1][1:]
                 repeat = False
-                max_len = 0
-
-            elif get_block_id == 1:
-                block_id = line.split()[1][1:]
-                get_block_id = 2
-            elif get_block_id == 2:
-                get_block_id = 0
-            elif not block_id is None:
-                seq_id, strand, start, end, length = line.split()
-                sample, chrom = seq_id_dict[seq_id]
-                start, end, length = int(start), int(end), int(length)
-                if sample in genome_lines and chrom in genome_lines[sample]:
-                    genome_lines[sample][chrom].append((min([start, end]), strand, length, block_id))
-                elif sample in genome_lines:
-                    genome_lines[sample][chrom] = [(min([start, end]), strand, length, block_id)]
-                else:
-                    genome_lines[sample] = {chrom:[(min([start, end]), strand, length, block_id)]}
-                if block_id in block_dict:
-                    if sample in block_dict[block_id]:
-                        block_dict[block_id][sample].append((start, end, chrom, strand))
-                    else:
-                        block_dict[block_id][sample] = [(start, end, chrom, strand)]
-                else:
-                    block_dict[block_id] = {sample:[(start, end, chrom, strand)]}
-                if length > max_len:
-                    max_len = length
-                if seq_id_dict[seq_id][0] in chrom_set:
-                    repeat = True
-                chrom_set.add(seq_id_dict[seq_id][0])
-            elif block_id is None:
-                seq_id, size, desc = line.split()
-                sample, contig = desc.split('_')
-                if int(sample) + 1 > no_of_chroms:
-                    no_of_chroms = int(sample) + 1
-                seq_id_dict[seq_id] = (sample, contig)
-                if sample in len_dict:
-                    len_dict[sample][contig] = int(size)
-                else:
-                    len_dict[sample] = {contig:int(size)}
-    new_genome_lines = {}
-    for i in genome_lines:
-        new_genome_lines[i] = {}
-        for j in genome_lines[i]:
-            new_genome_lines[i][j] = []
-            blocks = genome_lines[i][j]
-            blocks.sort()
-            last_core_pos = 1
-            non_core_list = []
-            for k in blocks:
-                pos, strand, length, block_id = k
-                if is_core_dict[block_id] == 'core':
-                    new_genome_lines[i][j].append([pos - last_core_pos, non_core_list])
-                    new_genome_lines[i][j].append([length, 'core', block_id, strand, pos])
-                    non_core_list = []
-                    last_core_pos = pos + length
-                else:
-                    non_core_list.append((length, is_core_dict[block_id], block_id, strand, pos - last_core_pos))
-            new_genome_lines[i][j].append([len_dict[i][j] - last_core_pos, non_core_list])
-    out_lines = [[]]
-    core_pos = {}
-    contig_order = []
-    for i in new_genome_lines['0']:
-        size = 0
-        for block in new_genome_lines['0'][i]:
-            size += block[0]
-        contig_order.append((size, i))
-    contig_order.sort(reverse=True)
-    num = 0
-    for contig_size in contig_order: # create the reference line
-        i = contig_size[1]
-        for block in new_genome_lines['0'][i]:
-            if block[1] == 'core':
-                out_lines[0].append(block)
-                core_pos[block[2]] = (num, block[3])
-                max_core = num
-            elif block[0] < 1:
-                out_lines[0].append(None)
-            elif num == 0:
-                out_lines[0].append(block + ['right'])
-            elif num == len(new_genome_lines['0'][i]) - 1:
-                out_lines[0].append(block + ['left'])
+                in_fasta_set = set()
             else:
-                out_lines[0].append(block + ['centre'])
-            num += 1
-    def reverse_noncore(noncore_block):
-        length = noncore_block[0]
-        new_noncore_block = [length, []]
-        for i in noncore_block[1][::-1]:
-            new_noncore_block[-1].append((i[0], i[1], i[2], i[3], length - (i[4] + i[0])))
-        return new_noncore_block
-    for i in range(1, no_of_chroms): # place noncore blocks with only one position
-        out_lines.append([None for x in range(max_core + 2)]) # create the line for the query genome
-        for j in new_genome_lines[str(i)]:
-            last_noncore = new_genome_lines[str(i)][j][-1]
-            if len(new_genome_lines[str(i)][j]) == 1:
-                out_lines[-1].append(last_noncore + ['centre']) # place contig with only noncore block
-            else: # place last noncore block
-                last_core = new_genome_lines[str(i)][j][-2]
-                if last_core[3] == core_pos[last_core[2]][1]: # the core block is orientated the same way as the reference core block
-                    if out_lines[-1][core_pos[last_core[2]][0] + 1] is None: # if noncore block is not already at location
-                        out_lines[-1][core_pos[last_core[2]][0] + 1] = last_noncore + ['left'] # add noncore block
-                    else:
-                        out_lines[-1][core_pos[last_core[2]][0] + 1] = [last_noncore + ['left'], out_lines[-1][core_pos[last_core[2]][0] + 1]] # else keep block and pair with new block
+                id, strand, start, end, length = line.split()
+                fasta, contig = seq_no_dict[id]
+                length = int(length)
+                start = int(start)
+                end = int(end)
+                genes = []
+                if strand == '-':
+                    start, end = end, start
+                for j in gene_list:
+                    if fasta + '_' + contig == j[0] and start <= j[2] <= end:
+                        genes.append([j[1], j[2] - start])
+                cat = 'none'
+                if fasta + '_' + contig in cats:
+                    for q in cats[fasta + '_' + contig]:
+                        if q[0] == 'all':
+                            cat = q[2]
+                        elif q[0] <= start <= end <= q[1]:
+                            cat = q[2]
+                        elif start <= q[0] <= q[1] <= end:
+                            if (q[1] - q[0]) / (end - start) >= 0.5:
+                                cat = q[2]
+                        elif start <= q[0] <= end:
+                            if (end - q[0]) / (end - start) >= 0.5:
+                                cat = q[2]
+                        elif start <= q[1] <= end:
+                            if (q[1] - start) / (end - start) >= 0.5:
+                                cat = q[2]
+                if fasta in in_fasta_set:
+                    repeat = True
                 else:
-                    if out_lines[-1][core_pos[last_core[2]][0] - 1] is None:
-                        last_noncore = reverse_noncore(last_noncore)
-                        out_lines[-1][core_pos[last_core[2]][0] - 1] = last_noncore + ['right']
-                    else:
-                        last_noncore = reverse_noncore(last_noncore)
-                        out_lines[-1][core_pos[last_core[2]][0] - 1] = [out_lines[-1][core_pos[last_core[2]][0] - 1], last_noncore + ['right']]
-                last_noncore = new_genome_lines[str(i)][j][0] # place first noncore block
-                last_core = new_genome_lines[str(i)][j][1]
-                if last_core[3] == core_pos[last_core[2]][1]:
-                    if out_lines[-1][core_pos[last_core[2]][0] - 1] is None:
-                        out_lines[-1][core_pos[last_core[2]][0] - 1] = last_noncore + ['right']
-                    else:
-                        out_lines[-1][core_pos[last_core[2]][0] - 1] = [out_lines[-1][core_pos[last_core[2]][0] - 1], last_noncore + ['right']]
-                else:
-                    if out_lines[-1][core_pos[last_core[2]][0] + 1] is None:
-                        last_noncore = reverse_noncore(last_noncore)
-                        out_lines[-1][core_pos[last_core[2]][0] + 1] = last_noncore + ['left']
-                    else:
-                        last_noncore = reverse_noncore(last_noncore)
-                        out_lines[-1][core_pos[last_core[2]][0] + 1] = [last_noncore + ['left'], out_lines[-1][core_pos[last_core[2]][0] + 1]]
-        for j in new_genome_lines[str(i)]:
-            last_noncore = None
-            for block in new_genome_lines[str(i)][j][1:]:
-                if type(block[1]) is str:
-                    out_lines[-1][core_pos[block[2]][0]] = block
-                    if not last_noncore is None and last_noncore[0] > 1: # if there is a noncore block before current block
-                        if block[3] == core_pos[block[2]][1] and out_lines[-1][core_pos[block[2]][0] - 1] is None: # if direction of current core block is same as ref and there is no block at noncore position
-                            if last_core_dir and core_pos[last_core[2]][0] + 1 == core_pos[block[2]][0] - 1: # if last core block in same direction as reference core block and last_core and core are next to each other in reference
-                                out_lines[-1][core_pos[block[2]][0] - 1] = last_noncore + ['centre']
-                            else:
-                                out_lines[-1][core_pos[block[2]][0] - 1] = last_noncore + ['right']
-                        elif block[3] != core_pos[block[2]][1] and out_lines[-1][core_pos[block[2]][0] + 1] is None:
-                            if not last_core_dir and core_pos[last_core[2]][0] - 1 == core_pos[block[2]][0] + 1:
-                                last_noncore = reverse_noncore(last_noncore)
-                                out_lines[-1][core_pos[block[2]][0] + 1] = last_noncore + ['centre']
-                            else:
-                                last_noncore = reverse_noncore(last_noncore)
-                                out_lines[-1][core_pos[block[2]][0] + 1] = last_noncore + ['left']
-                        elif last_core_dir and out_lines[-1][core_pos[last_core[2]][0] + 1] is None:
-                            out_lines[-1][core_pos[last_core[2]][0] + 1] = last_noncore + ['left']
-                        elif not last_core_dir and out_lines[-1][core_pos[last_core[2]][0] - 1] is None:
-                            last_noncore = reverse_noncore(last_noncore)
-                            out_lines[-1][core_pos[last_core[2]][0] - 1] = last_noncore + ['right']
-                        elif block[3] == core_pos[block[2]][1]:
-                            out_lines[-1][core_pos[block[2]][0] - 1] = [out_lines[-1][core_pos[block[2]][0] - 1], last_noncore + ['right']]
-                        elif block[3] != core_pos[block[2]][1]:
-                            last_noncore = reverse_noncore(last_noncore)
-                            out_lines[-1][core_pos[block[2]][0] + 1] = [last_noncore + ['left'], out_lines[-1][core_pos[block[2]][0] + 1]]
-                        else:
-                            print 'asdfasdfa'
-                    last_core = block
-                    last_core_dir = block[3] == core_pos[block[2]][1]
-                else:
-                    last_noncore = block
-    return out_lines, block_dict, is_core_dict
+                    in_fasta_set.add(fasta)
+                block_dict[fasta][contig].append(block_object(start, strand, length, block, genes, cat))
+    for i in block_dict:
+        for j in block_dict[i]:
+            block_dict[i][j].sort(key=lambda x: x.start)
+            for k in block_dict[i][j]:
+                k.type = block_type[k.block]
+    return block_dict, length_dict
 
-def draw_lines(in_lines, block_order_file, outfile, x_gap_size, y_gap_size, genome_height, figure_width, genome_line_width, core_sat, core_light, block_dict=None, is_core_dict=None):
-    block_order = {}
-    x_margin = 0
-    core_set = set()
-    for i in in_lines[0]:
-        if not i is None and i[1] == 'core':
-            core_set.add(i[2])
-    with open(block_order_file) as f:
+def order_blocks_core(block_dict):
+    core_order = []
+    num = 0
+    for j in range(len(block_dict['0'])):
+        for k in block_dict['0'][str(j)]:
+            if k.type == 'core':
+                core_order.append((k.block, k.strand))
+                k.order_num = num
+                num += 1
+    core_block_num = num
+    for i in range(1, len(block_dict)):
+        block_order_dict = {}
+        for j in block_dict[str(i)]:
+            max_len = 0
+            for k in block_dict[str(i)][j]:
+                #start, strand, length, block, block_type = k
+                if k.length > max_len and k.type == 'core':
+                    best_strand = k.strand
+                    best_block = k.block
+                    max_len = k.length
+                if k.block == core_order[0][0]:
+                    best_strand = k.strand
+                    best_block = k.block
+                    max_len = float('inf')
+            if max_len != 0:
+                block_order_dict[best_block] = (j, best_strand)
+        contig_order = []
+        num = 0
+        for j in core_order:
+            if j[0] in block_order_dict:
+                reverse = j[1] == block_order_dict[j[0]][1]
+                contig_order.append((block_order_dict[j[0]][0], reverse))
+                for k in block_dict[str(i)][block_order_dict[j[0]][0]]:
+                    if k.block == core_order[0][0]:
+                        start_pos = num
+                        break
+                    if k.type == 'core':
+                        num += 1
+        color_num = 0
+        for j in contig_order:
+            for k in range(len(block_dict[str(i)][j[0]])):
+                aninstance = block_dict[str(i)][j[0]][k]
+                if aninstance.type == 'core':
+                    if j[1]:
+                        aninstance.order_num = (color_num + core_block_num - start_pos) % core_block_num
+                    else:
+                        aninstance.order_num = core_block_num - (color_num + core_block_num - start_pos) % core_block_num
+                    color_num += 1
+    return block_dict
+
+def get_noncore(block_dict, length_dict, color_contigs=False):
+    core_order = []
+    max_coreb_length_dict = {}
+    for j in range(len(block_dict['0'])):
+        for k in block_dict['0'][str(j)]:
+            if k.type == 'core':
+                core_order.append((k.block, k.strand))
+                max_coreb_length_dict[k.block] = 0
+    out_blocks = []
+    for i in block_dict:
+        for j in block_dict[i]:
+            last_core = None
+            last_core_ori = None
+            last_core_end_pos = 0
+            noncore_block = []
+            for k in block_dict[i][j]:
+                if k.type == 'core':
+                    length_noncore = k.start - last_core_end_pos
+                    if k.length > max_coreb_length_dict[k.block]:
+                        max_coreb_length_dict[k.block] = k.length
+                    positions = []
+                    for num, l in enumerate(core_order):
+                        if l[0] == last_core and last_core_ori == l[1]:
+                            positions.append((num+1, 'left', True))
+                        elif l[0] == last_core:
+                            positions.append((num, 'right', False))
+                        elif l[0] == k.block and k.strand == l[1]:
+                            positions.append((num, 'right', True))
+                        elif l[0] == k.block:
+                            positions.append((num+1, 'left', False))
+                    if len(positions) > 2:
+                        sys.exit('something went wrong')
+                    out_blocks.append((i, noncore_block, length_noncore, positions))
+                    last_core = k.block
+                    last_core_end_pos = k.start + k.length
+                    last_core_ori = k.strand
+                    noncore_block = []
+                else:
+                    if color_contigs:
+                        k.cat = j
+                    noncore_block.append((k.start - last_core_end_pos, k.strand, k.length, k.block, k.type, k.genes, k.cat))
+            if last_core is None:
+                out_blocks.append((i, noncore_block, length_dict[i][j], []))
+            elif k.type != 'core':
+                positions = []
+                for num, l in enumerate(core_order):
+                    if l[0] == last_core and last_core_ori == l[1]:
+                        positions.append((num+1, 'left', True))
+                    elif l[0] == last_core:
+                        positions.append((num+2, 'right', False))
+                out_blocks.append((i, noncore_block, length_dict[i][j] - last_core_end_pos, positions))
+    return out_blocks
+
+
+def place_core(block_dict, color_contigs=False):
+    core_order = {}
+    count = 0
+    for j in range(len(block_dict['0'])):
+        for k in block_dict['0'][str(j)]:
+            if k.type == 'core':
+                core_order[k.block] = count
+                count += 1
+    out_array = [[] for i in range(len(core_order))]
+    max_coreb_length = [0 for i in range(len(core_order))]
+    for i in range(len(block_dict)):
+        for j in block_dict[str(i)]:
+            for k in block_dict[str(i)][j]:
+                if k.type == 'core':
+                    #start, strand, length, block, block_type, fig_pos = k
+                    if color_contigs:
+                        out_array[core_order[k.block]].append((k.length, j))
+                    else:
+                        out_array[core_order[k.block]].append((k.length, k.order_num))
+                    if k.length > max_coreb_length[core_order[k.block]]:
+                        max_coreb_length[core_order[k.block]] = k.length
+    return out_array, max_coreb_length
+
+
+def place_noncore(out_blocks):
+    placed_blocks = []
+    unplaced_blocks = []
+    block_loc = {}
+    for i in out_blocks:
+        row, pattern, size, positions = i
+        if size == 0:
+            continue
+        right_place = None
+        left_place = None
+        for j in positions:
+            if j[1] == 'left':
+                left_place = j[0]
+                left_ori = j[2]
+            else:
+                right_place = j[0]
+                right_ori = j[2]
+        placed = False
+        if left_place == right_place and not left_place is None:
+            placed = True
+            if left_ori:
+                placed_blocks.append((row, pattern, size, left_place, 'middle'))
+            else:
+                new_pattern = []
+                for j in pattern:
+                    start, strand, length, block, block_type, genes, cat = j
+                    start = size - (start + length)
+                    for k in genes:
+                        k[1] = length - k[1]
+                    new_pattern.append((start, strand, length, block, block_type, genes, cat))
+                placed_blocks.append((row, new_pattern, size, left_place, 'middle'))
+        elif left_place is None and not right_place is None:
+            placed = True
+            if right_ori:
+                placed_blocks.append((row, pattern, size, right_place, 'right'))
+            else:
+                new_pattern = []
+                for j in pattern:
+                    start, strand, length, block, block_type, genes, cat = j
+                    start = size - (start + length)
+                    for k in genes:
+                        k[1] = length - k[1]
+                    new_pattern.append((start, strand, length, block, block_type, genes, cat))
+                placed_blocks.append((row, new_pattern, size, left_place, 'right'))
+        elif not left_place is None and right_place is None:
+            placed = True
+            if left_ori:
+                placed_blocks.append((row, pattern, size, right_place, 'left'))
+            else:
+                new_pattern = []
+                for j in pattern:
+                    start, strand, length, block, block_type, genes, cat = j
+                    start = size - (start + length)
+                    for k in genes:
+                        k[1] = length - k[1]
+                    new_pattern.append((start, strand, length, block, block_type, genes, cat))
+                placed_blocks.append((row, new_pattern, size, left_place, 'left'))
+        if placed:
+            for j in placed_blocks[-1][1]:
+                if j[4] == 'noncore':
+                    if not placed_blocks[-1][3] in block_loc:
+                        block_loc[placed_blocks[-1][3]] = set()
+                    block_loc[placed_blocks[-1][3]].add(j[3])
+        else:
+            unplaced_blocks.append(i)
+    for i in unplaced_blocks:
+        row, pattern, size, positions = i
+        if positions == []:
+            placed_blocks.append((row, pattern, size, None, None))
+        else:
+            for j in positions:
+                if j[1] == 'left':
+                    left_place = j[0]
+                    left_ori = j[2]
+                else:
+                    right_place = j[0]
+                    right_ori = j[2]
+            left_count = 0
+            right_count = 0
+            for j in pattern:
+                if right_place in block_loc and j[3] in block_loc[right_place]:
+                    right_count += 1
+                if left_place in block_loc and j[3] in block_loc[left_place]:
+                    left_count += 1
+            if left_count > right_count or right_count == left_count and left_place < right_place:
+                if left_ori:
+                    placed_blocks.append((row, pattern, size, right_place, 'left'))
+                else:
+                    new_pattern = []
+                    for j in pattern:
+                        start, strand, length, block, block_type, genes, cat = j
+                        start = size - (start + length)
+                        for k in genes:
+                            k[1] = length - k[1]
+                        new_pattern.append((start, strand, length, block, block_type, genes, cat))
+                    placed_blocks.append((row, new_pattern, size, left_place, 'left'))
+            else:
+                if right_ori:
+                    placed_blocks.append((row, pattern, size, right_place, 'right'))
+                else:
+                    new_pattern = []
+                    for j in pattern:
+                        start, strand, length, block, block_type, genes, cat = j
+                        start = size - (start + length)
+                        for k in genes:
+                            k[1] = length - k[1]
+                        new_pattern.append((start, strand, length, block, block_type, genes, cat))
+                    placed_blocks.append((row, new_pattern, size, left_place, 'right'))
+    return placed_blocks
+
+def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, color_cat=True, color_contigs=False):
+    noncore_max_size = [0 for i in range(len(core_blocks) + 2)]
+    unattached_size = [[] for i in range(len(core_blocks[0]))]
+    figure_width = 50000
+    genome_height = block_height + y_gap
+    height = (len(core_blocks[0]) + 3 + legend_size/2) * genome_height * 2
+    core_sat = 0.8
+    core_light = 0.5
+    if out_file.endswith('html'):
+        svg = scalableVectorGraphicsHTML(height, figure_width, False)
+    else:
+        svg = scalableVectorGraphicsHTML(height, figure_width, True)
+    for i in placed_blocks:
+        row, pattern, size, place, align = i
+        if place is None:
+            unattached_size[int(row)].append(size)
+        elif size > noncore_max_size[place]:
+            noncore_max_size[place] = size
+
+    curr_x = 0
+    gap_size = 20
+    max_unattached = 0
+    max_unattached_num = 0
+    for i in unattached_size:
+        if sum(i) > max_unattached:
+            max_unattached = sum(i)
+            max_unattached_num = len(i)
+    usable_length = figure_width - gap_size * 2 * (len(core_blocks) + max_unattached_num - 1)
+    bp = sum(core_size) + sum(noncore_max_size) + max_unattached
+    scale = bp / usable_length
+    gap_pos = {}
+    for num1, i in enumerate(core_blocks):
+        gap_pos[num1] = curr_x
+        curr_x += noncore_max_size[num1] / scale + gap_size * 2
+        for num2, j in enumerate(i):
+            width, block_no = j
+            if color_contigs:
+                color1 = color_list[int(block_no)]
+                color2 = color_list[int(block_no)]
+            else:
+                hue = int(block_no * 1.0 / len(core_size) * 360)
+                color1 = hsl_to_rgb(hue, core_sat, core_light)
+                color2 = hsl_to_rgb(hue, core_sat, core_light - 0.3)
+            svg.drawOutRect(curr_x, num2 * genome_height, width/scale, block_height, color1, color2)
+        curr_x += core_size[num1] / scale
+    gap_pos[num1+1] = curr_x
+    noncore_dict = {}
+    unplaced_start = curr_x + gap_size * 2
+    placed_blocks.sort(key=lambda x: x[2], reverse=True)
+    unplaced_taken = {}
+    for i in placed_blocks:
+        row, pattern, size, gap, align = i
+        if gap is None:
+            if row in unplaced_taken:
+                x1 = unplaced_taken[row]
+            else:
+                x1 = unplaced_start
+            x2 = x1 + size/scale
+            unplaced_taken[row] = x2 + gap_size * 2
+        elif align == 'left':
+            x1 = gap_pos[gap]
+            x2 = gap_pos[gap] + size/scale
+        elif align == 'middle':
+            x1 = gap_pos[gap] + gap_size + noncore_max_size[gap]/scale/2 - size/scale/2
+            x2 = gap_pos[gap] + gap_size + noncore_max_size[gap]/scale/2 - size/scale/2 + size/scale
+        elif align == 'right':
+            x1 = gap_pos[gap] + noncore_max_size[gap]/scale - size/scale + 2 * gap_size
+            x2 = gap_pos[gap] + noncore_max_size[gap]/scale + 2 * gap_size
+        y = int(row) * genome_height + block_height / 2
+        svg.drawLine(x1, y, x2, y, th=6)
+        for j in pattern:
+            start, strand, length, block, block_type, genes, cat = j
+            if block in noncore_dict:
+                noncore_dict[block].append((row, x1 + start/scale, length, genes, cat))
+            else:
+                noncore_dict[block] = [(row, x1 + start/scale, length, genes, cat)]
+    noncore_order = []
+    for i in noncore_dict:
+        pos_list = []
+        for j in noncore_dict[i]:
+            pos_list.append(j[1])
+        pos_list.sort()
+        noncore_order.append((pos_list[len(pos_list)//2], i))
+    noncore_order.sort()
+    block_order = []
+    for i in noncore_order:
+        block_order.append(i[1])
+    curr_x = 0
+    panel2_start = len(core_blocks[0]) * genome_height + genome_height * 4
+    gene_dict_a = {}
+    gene_dict_b = {}
+    pattern_dict = {}
+    cat_count = 0
+    bp_blocks = 0
+    block_count = {}
+    for num, i in enumerate(block_order):
+        block_count[i] = {}
+        max_block_width = 0
+        for j in noncore_dict[i]:
+            row, x, length, genes, cat = j
+            if row in block_count[i]:
+                block_count[i][row][0] += 1
+            else:
+                block_count[i][row] = [1, 0]
+            if length > max_block_width:
+                max_block_width = length
+        bp_blocks += max_block_width
+    scale2 = bp_blocks / (figure_width - gap_size * (len(block_order) - 1))
+    cat_list = []
+    for num, i in enumerate(block_order):
+        id = 'g' + str(num)
+        if not color_contigs:
+            color = color_list[num % len(color_list)]
+            pattern = pattern_list[num % len(pattern_list)]
+            svg.create_pattern(id, color, pattern, 50, 50)
+            pattern_dict[id]= color
+            if color_cat:
+                for j in noncore_dict[i]:
+                    row, x, length, genes, cat = j
+                    id2 = cat
+                    if not id2 in pattern_dict:
+                        color2 = color_list[cat_count % len(color_list)]
+                        cat_count += 1
+                        cat_list.append(id2)
+                        pattern = pattern_list[cat_count % len(pattern_list)]
+                        svg.create_pattern(id2, color2, pattern, 50, 50)
+                        pattern_dict[id2] = color2
+        max_block_width = 0
+        svg.create_group('gr' + str(num))
+        for j in noncore_dict[i]:
+            row, x, length, genes, cat = j
+            if color_cat:
+                id2 = cat
+                color2 = pattern_dict[id2]
+            else:
+                id2 = id
+                color2 = color
+            for k in genes:
+                if k[0] in gene_dict_a:
+                    gene_dict_a[k[0]].append((x + k[1]/scale, int(row)))
+                    gene_dict_b[k[0]].append((curr_x + k[1]/scale2, curr_x -gap_size/2, int(row)))
+                else:
+                    gene_dict_a[k[0]] = [(x + k[1]/scale, int(row))]
+                    gene_dict_b[k[0]] = [(curr_x + k[1]/scale2, curr_x -gap_size/2, int(row))]
+            svg.drawPatternRect(x, int(row) * genome_height, length/scale, block_height, id, color)
+            block_height_2 = block_height/block_count[i][row][0]
+            svg.drawPatternRect(curr_x, int(row) * genome_height + panel2_start + block_height_2 * block_count[i][row][1], length/scale2, block_height_2, id2, color2)
+            block_count[i][row][1] += 1
+            if length/scale2 + gap_size > max_block_width:
+                max_block_width = length/scale2 + gap_size
+        curr_x += max_block_width
+        svg.close_group()
+    svg.create_group('annot', 'anno')
+    color_list.reverse()
+    for num, i in enumerate(gene_dict_a):
+        min_y = float('inf')
+        color = color_list[num % len(color_list)]
+        for j in gene_dict_a[i]:
+            x, y = j
+            y = y * genome_height + genome_height/2
+            svg.drawSymbol(x, y, block_height/2, color, 'd', alpha=1.0, lt=10)
+            if y < min_y:
+                min_y = y
+                min_x = x
+        # svg.drawLine(min_x, min_y-block_height/4, min_x, 0, 10)
+        # svg.writeString(i, min_x, 0, 64, rotate=315)
+    for num, i in enumerate(gene_dict_b):
+        min_y = float('inf')
+        color = color_list[num % len(color_list)]
+        for j in gene_dict_b[i]:
+            x1, x2, y = j
+            y = y * genome_height + genome_height / 2 + panel2_start
+            svg.drawSymbol(x1, y, block_height/2, color, 'd', alpha=1.0, lt=10)
+         #   svg.drawLine(x1 - block_height/4, y, x2, y, 5)
+            if y < min_y:
+                min_y = y
+        # svg.drawLine(x2, min_y, x2, len(core_blocks[0]) * genome_height + panel2_start, 10)
+        # svg.writeString(i, x2, len(core_blocks[0]) * genome_height + panel2_start, 64, rotate=315, justify='right')
+    svg.close_group()
+    legend_start = (len(core_blocks[0]) + 3) * genome_height * 2
+    font_size = genome_height * 0.7
+    if len(pattern_dict) > 0:
+        svg.writeString("Block categories", figure_width/2, legend_start+3*genome_height/4, font_size)
+    for num, i in enumerate(cat_list):
+        svg.drawPatternRect(figure_width/2, legend_start + (num+1) * genome_height, figure_width/100, block_height, i, pattern_dict[i])
+        svg.writeString(i, figure_width/2 + figure_width/100, legend_start + (num+1) * genome_height + 3 * genome_height/4, font_size)
+    if len(gene_dict_b) > 0:
+        svg.writeString("Genes", figure_width/4, legend_start+3*genome_height/4, font_size)
+    for num, i in enumerate(gene_dict_b):
+        color = color_list[num % len(color_list)]
+        svg.drawSymbol(figure_width/4, legend_start + (num+1) * genome_height + block_height/2, block_height/2, color, 'd', alpha=1.0, lt=10)
+        svg.writeString(i, figure_width/4 + block_height/2, legend_start + (num+1) * genome_height + 3 * genome_height/4, font_size)
+    curr_y = legend_start
+    genome_line_width = block_height/15
+    svg.drawLine(50, curr_y+block_height/2, 50 + 100000 / scale, curr_y+block_height/2, genome_line_width, (0, 0, 0))
+    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.drawLine(50 + 100000 / scale, curr_y, 50 + 100000 / scale, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.writeString('100 Kbp (panel a)', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    svg.drawLine(50, curr_y + block_height/2, 50 + 10000 / scale2, curr_y+block_height/2, genome_line_width, (0, 0, 0))
+    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.drawLine(50 + 10000 / scale2, curr_y, 50 + 10000 / scale2, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.writeString('10 Kbp (panel b)', 50, curr_y + genome_height+font_size, font_size)
+    curr_y += genome_height * 2.1
+    svg.drawHueGradient(50, curr_y, figure_width/10, genome_height, core_sat, core_light)
+    svg.writeString('start', 50, curr_y + genome_height + font_size, font_size)
+    svg.writeString('Position of core block in genome', 50+figure_width/20, curr_y + genome_height + font_size, font_size, justify='middle')
+    svg.writeString('end', 50+figure_width/10, curr_y + genome_height + font_size, font_size, justify='right')
+    curr_y += genome_height * 2.1
+    color = hsl_to_rgb(0, core_sat, core_light)
+    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50, curr_y, figure_width / 100, genome_height, color, out_color)
+    color = hsl_to_rgb(200, core_sat, core_light)
+    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(figure_width / 100 + 50 + gap, curr_y, figure_width / 200, genome_height, color, out_color)
+    svg.writeString('Core blocks', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    color = color_list[12]
+    pattern = pattern_list[0]
+    svg.create_pattern('leg1', color, pattern, 50, 50)
+    svg.drawPatternRect(50, curr_y, figure_width/100, genome_height, 'leg1', color, 1)
+    color = color_list[13]
+    pattern = pattern_list[1]
+    svg.create_pattern('leg2', color, pattern, 50, 50)
+    svg.drawPatternRect(figure_width/100 + 50 +gap, curr_y, figure_width/200, genome_height, 'leg2', color, 1)
+    svg.writeString('Non-core blocks', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    svg.drawLine(50, curr_y + genome_height/2, figure_width/100, curr_y + genome_height/2, genome_line_width)
+    svg.drawLine(figure_width/100 + 50 + gap, curr_y + genome_height/2, figure_width/200, curr_y + genome_height/2, genome_line_width)
+    svg.writeString('Unaligned sequence', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    color = hsl_to_rgb(0, core_sat, core_light)
+    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50, curr_y, figure_width/100, genome_height, color, out_color)
+    svg.drawLine(figure_width/100+50, curr_y + genome_height/2, 50+3*figure_width/100, curr_y + genome_height/2, genome_line_width)
+    color = color_list[12]
+    svg.drawPatternRect(figure_width/100+50, curr_y, figure_width/100, genome_height, 'leg2', color, 1)
+    color = color_list[13]
+    svg.drawPatternRect(50+figure_width*5/200, curr_y, figure_width/200, genome_height, 'leg1', color, 1)
+    color = hsl_to_rgb(200, core_sat, core_light)
+    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50 + 3*figure_width/100 + gap_size*2, curr_y, figure_width/100, genome_height, color, out_color)
+    svg.writeString('Noncore region adjacent to left core block', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    color = hsl_to_rgb(0, core_sat, core_light)
+    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50, curr_y, figure_width / 100, genome_height, color, out_color)
+    svg.drawLine(figure_width / 100 + 50 + gap_size, curr_y + genome_height / 2, 50 + gap_size + 3 * figure_width / 100,
+                 curr_y + genome_height / 2, genome_line_width)
+    color = color_list[12]
+    svg.drawPatternRect(figure_width / 100 + 50 + gap_size, curr_y, figure_width / 100, genome_height, 'leg2', color, 1)
+    color = color_list[13]
+    svg.drawPatternRect(50 + figure_width * 5 / 200 + gap_size, curr_y, figure_width / 200, genome_height, 'leg1', color, 1)
+    color = hsl_to_rgb(200, core_sat, core_light)
+    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50 + 3 * figure_width / 100 + gap_size * 2, curr_y, figure_width / 100, genome_height, color,
+                    out_color)
+    svg.writeString('Noncore region adjacent to both core blocks', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    color = hsl_to_rgb(0, core_sat, core_light)
+    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50, curr_y, figure_width / 100, genome_height, color, out_color)
+    svg.drawLine(figure_width / 100 + 50 + 2*gap_size, curr_y + genome_height / 2, 50 + 3 * figure_width / 100 + 2*gap_size,
+                 curr_y + genome_height / 2, genome_line_width)
+    color = color_list[12]
+    svg.drawPatternRect(figure_width / 100 + 50 + 2*gap_size, curr_y, figure_width / 100, genome_height, 'leg2', color, 1)
+    color = color_list[13]
+    svg.drawPatternRect(50 + figure_width * 5 / 200 + 2*gap_size, curr_y, figure_width / 200, genome_height, 'leg1', color, 1)
+    color = hsl_to_rgb(200, core_sat, core_light)
+    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
+    svg.drawOutRect(50 + 3 * figure_width / 100 + gap_size * 2, curr_y, figure_width / 100, genome_height, color,
+                    out_color)
+    svg.writeString('Noncore region adjacent to right core block', 50, curr_y + genome_height + font_size, font_size)
+    if out_file.endswith('html'):
+        svg.writesvg(out_file, False)
+    else:
+        svg.writesvg(out_file, True)
+
+
+
+def get_gene_pos(working_dir, genes_faa, skip, num_threads='8', min_ident=90, min_length=0.5):
+    if not skip:
+        subprocess.Popen('makeblastdb -in ' + genes_faa + ' -out ' + working_dir + '/tempdb -dbtype prot', shell=True).wait()
+        subprocess.Popen('blastx -query ' + working_dir + '/input.fasta -db ' + working_dir + '/tempdb -outfmt 6 -num_threads '
+                         + num_threads + ' -out ' + working_dir + '/gene_input.out', shell=True).wait()
+    len_dict = {}
+    with open(genes_faa) as f:
         for line in f:
             if line.startswith('>'):
-                chrom_name = line.split('_')[0][1:]
-                if not chrom_name in block_order:
-                    block_order[chrom_name] = {}
-                    count = 0
+                name = line.split()[0][1:]
+                len_dict[name] = 0
             else:
-                for i in line.split():
-                    the_block = i[1:]
-                    if the_block in core_set:
-                        block_order[chrom_name][the_block] = count
-                        count += 1
-    block_order_f2 = [[] for i in range(len(max(in_lines,key=len)))]
-    block_sizes = [0 for i in range(len(max(in_lines,key=len)))]
-    gotten_block = set()
-    for i in in_lines:
-        for num, j in enumerate(i):
-            if not j is None and len(j) != 2:
-                if type(j[1]) is list:
-                    for k in j[1]:
-                        if not k[2] in gotten_block:
-                            block_order_f2[num].append(k[2])
-                            gotten_block.add(k[2])
-                if block_sizes[num] < j[0]:
-                    block_sizes[num] = j[0]
-            if not j is None and len(j) == 2:
-                for k in j[0][1]:
-                    if not k[2] in gotten_block:
-                        block_order_f2[num].append(k[2])
-                        gotten_block.add(k[2])
-                for k in j[1][1]:
-                    if not k[2] in gotten_block:
-                        block_order_f2[num].append(k[2])
-                        gotten_block.add(k[2])
-                tot_size = j[0][0] + j[1][0]
-                if block_sizes[num] < tot_size:
-                    block_sizes[num] = tot_size
-    new_block_order_f2 = []
-    for i in block_order_f2:
-        for j in i:
-            new_block_order_f2.append(j)
-    svg = scalableVectorGraphics(genome_height * len(in_lines) + y_gap_size * (len(in_lines) -1) + 500, figure_width + x_margin)
-    scale = (figure_width - x_gap_size * (len(block_sizes) - 1)) * 1.0 / sum(block_sizes)
-    curr_y = 0 # (genome_height + y_gap_size - 1) * len(in_lines)
-    color_dict = {}
-    color_no = 0
-    core_block_order = []
-    for line_num, i in enumerate(in_lines):
-        curr_x = 0
-        for num, j in enumerate(i):
-            if j is None:
-                curr_x += block_sizes[num] * scale + x_gap_size
-            elif j[1] == 'core':
-                length, core, block_id, strand, pos = j
-                core_block_order.append(block_id)
-                # print block_id, list(block_order[str(line_num)])
-                hue = int(block_order[str(line_num)][block_id] * 1.0 / len(block_order[str(line_num)]) * 360)
-                color = hsl_to_rgb(hue, core_sat, core_light)
-                color_dict[block_id] = color
-                out_color = hsl_to_rgb(hue, core_sat, max([core_light - 0.2, 0]))
-                width = length * scale
-                x1 = curr_x + (block_sizes[num] / 2 - length / 2) * scale
-                svg.drawOutRect(x1, curr_y, width, genome_height, color, out_color)
-                # print 'ding'
-                curr_x += block_sizes[num] * scale
-            elif len(j) == 2:
-                x1 = curr_x
-                x2 = x2 = x1 + j[0][0] * scale
-                svg.drawLine(x1, curr_y + genome_height / 2, x2, curr_y + genome_height / 2, genome_line_width, (0, 0, 0))
-                for k in j[0][1]:
-                    if k[2] in color_dict:
-                        color = color_dict[k[2]]
-                    else:
-                        color = color_list[color_no % len(color_list)]
-                        color_dict[k[2]] = color
-                        pattern = pattern_list[color_no % len(pattern_list)]
-                        svg.create_pattern(k[2], color, pattern, 10, 10)
-                        color_no += 1
-                    blockx = x1 + k[4] * scale
-                    block_width = k[0] * scale
-                    svg.drawPatternRect(blockx, curr_y, block_width, genome_height, k[2], color, 1)
-                x1 = block_sizes[num] * scale + x_gap_size + curr_x - j[1][0] * scale
-                x2 = x1 + j[1][0] * scale
-                svg.drawLine(x1, curr_y + genome_height / 2, x2, curr_y + genome_height / 2, genome_line_width, (0, 0, 0))
-                for k in j[1][1]:
-                    if k[2] in color_dict:
-                        color = color_dict[k[2]]
-                    else:
-                        color = color_list[color_no % len(color_list)]
-                        color_dict[k[2]] = color
-                        pattern = pattern_list[color_no % len(pattern_list)]
-                        svg.create_pattern(k[2], color, pattern, 10, 10)
-                        color_no += 1
-                    blockx = x1 + k[4] * scale
-                    block_width = k[0] * scale
-                    svg.drawPatternRect(blockx, curr_y, block_width, genome_height, k[2], color, 1)
-                curr_x += block_sizes[num] * scale + x_gap_size
+                len_dict[name] += len(line.rstrip())
+    out_list = []
+    with open(working_dir + '/gene_input.out') as f:
+        for line in f:
+            query, subject, ident, length, mismatch, indel, qstart, qstop, rstart, rstop, eval, bitscore = line.split()
+            if float(length) >= min_length * len_dict[subject] and float(ident) > min_ident:
+                out_list.append((query, subject, int(qstart)))
+    return out_list
+
+
+def get_gene_file(gene_file, name_dict):
+    with open(gene_file) as f:
+        for line in f:
+            fasta, contig, gene, pos = line.split()
+            for i in name_dict:
+                if name_dict[i] == (fasta, contig):
+                    out_list.append(i, gene, int(pos))
+    return out_list
+
+def get_categories(cat_file, name_dict):
+    cats = {}
+    with open(cat_file) as f:
+        for line in f:
+            if len(line.split()) == 5:
+                fasta, contig, cat, start, stop = line.split()
+                start, stop = int(start), int(stop)
             else:
-                if j[2] == 'left':
-                    x1 = curr_x
-                elif j[2] == 'right':
-                    x1 = block_sizes[num] * scale + x_gap_size + curr_x - j[0] * scale
-                elif j[2] == 'centre':
-                    x1 = block_sizes[num] * scale * 0.5 + x_gap_size * 0.5 + curr_x - j[0] * scale * 0.5
-                x2 = x1 + j[0] * scale
-                svg.drawLine(x1, curr_y + genome_height / 2, x2, curr_y + genome_height / 2, genome_line_width, (0, 0, 0))
-                for k in j[1]:
-                    if k[2] in color_dict:
-                        color = color_dict[k[2]]
-                    else:
-                        color = color_list[color_no % len(color_list)]
-                        color_dict[k[2]] = color
-                        pattern = pattern_list[color_no % len(pattern_list)]
-                        svg.create_pattern(k[2], color, pattern, 10, 10)
-                        color_no += 1
-                    blockx = x1 + k[4] * scale
-                    block_width = k[0] * scale
-                    svg.drawPatternRect(blockx, curr_y, block_width, genome_height, k[2], color, 1)
-                curr_x += block_sizes[num] * scale + x_gap_size
-
-        curr_y += genome_height + y_gap_size
-    curr_y += 40
-    svg.drawLine(50, curr_y, 50 + 100000 * scale, curr_y, genome_line_width, (0, 0, 0))
-    svg.drawLine(50, curr_y - 10, 50, curr_y + 10, genome_line_width, (0,0,0))
-    svg.drawLine(50 + 100000 * scale, curr_y - 10, 50 + 100000 * scale, curr_y + 10, genome_line_width, (0,0,0))
-    svg.writeString('100kbp', 50 + 50000 * scale, curr_y + 20, 12, justify='middle')
-    curr_y += 50
-    color = hsl_to_rgb(0, core_sat, core_light)
-    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(50, curr_y, 100, genome_height, color, out_color)
-    color = hsl_to_rgb(200, core_sat, core_light)
-    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(170, curr_y, 60, genome_height, color, out_color)
-    svg.writeString('Core blocks', 50, curr_y + genome_height + 15, 12)
-    curr_y += 50
-    svg.drawHueGradient(50, curr_y, 500, genome_height, core_sat, core_light)
-    svg.writeString('start', 50, curr_y + genome_height + 15, 12)
-    svg.writeString('Position of core block in genome', 300, curr_y + genome_height + 15, 12, justify='middle')
-    svg.writeString('end', 550, curr_y + genome_height + 15, 12, justify='right')
-    curr_y += 50
-    color = color_list[0]
-    pattern = pattern_list[0]
-    svg.create_pattern('leg1', color, pattern, 10, 10)
-    svg.drawPatternRect(170, curr_y, 60, genome_height, 'leg1', color, 1)
-    color = color_list[1]
-    pattern = pattern_list[1]
-    svg.create_pattern('leg2', color, pattern, 10, 10)
-    svg.drawPatternRect(50, curr_y, 100, genome_height, 'leg2', color, 1)
-    svg.writesvg(outfile)
-    svg.writeString('Non-core blocks', 50, curr_y + genome_height + 15, 12)
-    curr_y += 50
-    svg.drawLine(50, curr_y + genome_height/2, 150, curr_y + genome_height/2, genome_line_width)
-    svg.drawLine(170, curr_y + genome_height/2, 230, curr_y + genome_height/2, genome_line_width)
-    svg.writeString('Unaligned sequence', 50, curr_y + genome_height + 15, 12)
-    curr_y += 50
-    color = hsl_to_rgb(0, core_sat, core_light)
-    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(50, curr_y, 100, genome_height, color, out_color)
-    svg.drawLine(150, curr_y + genome_height/2, 330, curr_y + genome_height/2, genome_line_width)
-    color = color_list[1]
-    svg.drawPatternRect(150, curr_y, 100, genome_height, 'leg2', color, 1)
-    color = color_list[0]
-    svg.drawPatternRect(270, curr_y, 60, genome_height, 'leg1', color, 1)
-    color = hsl_to_rgb(200, core_sat, core_light)
-    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(330 + x_gap_size, curr_y, 100, genome_height, color, out_color)
-    svg.writeString('Noncore region adjacent to left core block', 50, curr_y + genome_height + 15, 12)
-    curr_y += 50
-    color = hsl_to_rgb(0, core_sat, core_light)
-    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(50, curr_y, 100, genome_height, color, out_color)
-    svg.drawLine(150 + x_gap_size/2, curr_y + genome_height/2, 330 + x_gap_size/2, curr_y + genome_height/2, genome_line_width)
-    color = color_list[1]
-    svg.drawPatternRect(150 + x_gap_size/2, curr_y, 100, genome_height, 'leg2', color, 1)
-    color = color_list[0]
-    svg.drawPatternRect(270 + x_gap_size/2, curr_y, 60, genome_height, 'leg1', color, 1)
-    color = hsl_to_rgb(200, core_sat, core_light)
-    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(330 + x_gap_size, curr_y, 100, genome_height, color, out_color)
-    svg.writeString('Noncore region adjacent to both core blocks', 50, curr_y + genome_height + 15, 12)
-    curr_y += 50
-    color = hsl_to_rgb(0, core_sat, core_light)
-    out_color = hsl_to_rgb(0, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(50, curr_y, 100, genome_height, color, out_color)
-    svg.drawLine(150 + x_gap_size, curr_y + genome_height/2, 330 + x_gap_size, curr_y + genome_height/2, genome_line_width)
-    color = color_list[1]
-    svg.drawPatternRect(150 + x_gap_size, curr_y, 100, genome_height, 'leg2', color, 1)
-    color = color_list[0]
-    svg.drawPatternRect(270 + x_gap_size, curr_y, 60, genome_height, 'leg1', color, 1)
-    color = hsl_to_rgb(200, core_sat, core_light)
-    out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(330 + x_gap_size, curr_y, 100, genome_height, color, out_color)
-    svg.writeString('Noncore region adjacent to right core block', 50, curr_y + genome_height + 15, 12)
-    temp_new_block_order_f2 = []
-    for i in new_block_order_f2:
-        if len(block_dict[i]) != len(in_lines):
-            temp_new_block_order_f2.append(i)
-            print 'dong'
-        else:
-            print 'ding'
-    new_block_order_f2 = temp_new_block_order_f2
-    if not block_dict is None:
-        curr_x = 0
-        for num1, i in enumerate(new_block_order_f2):
-            max_size = 0
-            for num2 in range(len(in_lines)):
-                if str(num2) in block_dict[i]:
-                    start, stop, contig, strand = block_dict[i][str(num2)][0]
-                    size = abs(start - stop)
-                    svg.drawPatternRect(curr_x, curr_y + genome_height + 20 + num2 * (genome_height + 5), size / 100, genome_height, i, color_dict[i], 1)
-                    if size > max_size:
-                        max_size = size
-            curr_x += max_size / 100 + 4
-
-    svg.writesvg(outfile)
-    return core_block_order + new_block_order_f2, color_dict[i]
+                fasta, contig, cat = line.split()
+                start, stop = 'all', 'all'
+            for i in name_dict:
+                if name_dict[i] == (fasta, contig):
+                    name = i
+                    break
+            if name in cats:
+                cats[name].append((start, stop, cat))
+            else:
+                cats[name] = [(start, stop, cat)]
+    return cats
 
 
 
-
-#
 parser = argparse.ArgumentParser(prog='Chromatiblock 0.1.0', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
 Chromatiblock.py: Large scale whole genome visualisation using colinear blocks.
 
@@ -818,59 +1130,94 @@ USAGE: python Chromatiblock.py
 
 
 ''', epilog="Thanks for using Chromatiblock")
+
+
 parser.add_argument('-d', '--input_directory', action='store', help='fasta file of assembled contigs, scaffolds or finished genomes.')
-parser.add_argument('-r', '--reference_genome', action='store', help='fasta file in directory to use as reference')
 parser.add_argument('-l', '--order_list', action='store', help='List of fasta files in desired order.')
 parser.add_argument('-f', '--fasta_files', nargs='+', action='store', help='List of fasta/genbank files to use as input')
-# parser.add_argument('-cl', '--command_line', action='store_true', default=False, help='run Chromatiblock in command-line mode')
 parser.add_argument('-w', '--working_directory', action='store', help='Folder to write intermediate files.')
 parser.add_argument('-s', '--sibelia_path', action='store', default='Sibelia', help='Specify path to sibelia '
-                                                                                    '(does not need to be set if Sibelia binary is in path).')
-parser.add_argument('-sm', '--sibelia_mode', action='store', default='fine', help='mode for running sibelia <loose|fine|far>')
-parser.add_argument('-o', '--svg', action='store', help='Location to write svg output.')
-parser.add_argument('-m', '--min_block_size', action='store', type=int, default=5000, help='Minimum size of syntenic block.')
-
+                                                                '(does not need to be set if Sibelia binary is in path).')
+parser.add_argument('-sm', '--sibelia_mode', action='store', default='loose', help='mode for running sibelia <loose|fine|far>')
+parser.add_argument('-o', '--out', action='store', help='Location to write output (options *.svg/*.html/*.png')
+parser.add_argument('-q', '--ppi', action='store', type=int, default=50, help="pixels per inch (only used for png)")
+parser.add_argument('-m', '--min_block_size', action='store', type=int, default=1000, help='Minimum size of syntenic block.')
+parser.add_argument('-c', '--categorise', action='store', help='color blocks by category')
+parser.add_argument('-gb', '--genes_of_interest_blast', action='store', help='mark genes of interest')
+parser.add_argument('-gf', '--genes_of_interest_file', action='store', help='mark genes of interest')
+parser.add_argument('-gh', '--genome_height', action='store', type=int, default=280, help='Height of genome blocks')
+parser.add_argument('-vg', '--gap', action='store', type=int, default=20, help='gap between genomes')
+parser.add_argument('-ss', '--skip_sibelia', action='store_true', help="Use sibelia output already in working directory")
+parser.add_argument('-sb', '--skip_blast', action='store_true', help="use existing BLASTx file for annotation")
 
 
 args = parser.parse_args()
 
 
-fasta_list = []
-# if args.command_line:
-if True:
-    if args.fasta_files is None and args.input_directory is None:
-        sys.stderr.write('Please specify a list of fasta files to create figure (-f) or directory containing fasta files (-d)')
-    elif not args.fasta_files is None and not args.input_directory is None:
-        sys.stderr.write('Please use only one of the directory or fasta flags')
-    elif not args.input_directory is None and args.reference_genome is None:
-        sys.stderr.write('Please specify which fasta is the reference fasta')
-    elif not args.input_directory is None:
-        fasta_list.append(os.path.abspath(args.reference_genome))
-        for i in os.listdir(args.input_directory):
-            abspath = os.path.abspath(args.input_directory + '/' + i)
-            if not abspath in fasta_list:
-                if abspath.endswith('.fna') or abspath.endswith('.fa') or abspath.endswith('.fasta') or abspath.endswith('.gbk'):
-                    fasta_list.append(abspath)
-    elif not args.fasta_files is None:
-        fasta_list = args.fasta_files
-    if os.path.exists(args.working_directory):
-        if not os.path.isdir(args.working_directory):
-            sys.exit('Working directory is a file.')
-    else:
-        os.makedirs(args.working_directory)
-    if not args.order_list is None:
-        with open(args.order_list) as f:
-            new_fasta_list = []
-            for line in f:
-                gotit = False
-                for i in fasta_list:
-                    if line.rstrip() in i:
-                        new_fasta_list.append(i)
-                        gotit = True
-                        break
-        fasta_list = new_fasta_list
-        print len(fasta_list)
-    write_fasta_sibel(fasta_list, args.working_directory + '/input.fasta')
-    run_sibel(args.working_directory + '/input.fasta', args.working_directory,   args.sibelia_path, args.sibelia_mode, args.min_block_size)
-    genome_lines, blocks, is_core_dict = get_genome_lines(args.working_directory + '/blocks_coords.txt')
-    block_order, color_dict = draw_lines(genome_lines, args.working_directory + '/genomes_permutations.txt', args.svg, 10, 10, 20, 5000, 4, 0.3, 0.5, blocks, is_core_dict)
+
+
+
+if not args.input_directory is None:
+    fasta_list = []
+    for i in os.listdir(args.input_directory):
+        abspath = os.path.abspath(args.input_directory + '/' + i)
+        if not abspath in fasta_list:
+            if abspath.endswith('.fna') or abspath.endswith('.fa') or abspath.endswith('.fasta') or abspath.endswith('.gbk'):
+                fasta_list.append(abspath)
+elif not fasta_files is None:
+    fasta_list = args.fasta_files
+else:
+    sys.stderr.write('No input files found use -f or -d')
+    sys.exit()
+
+if not args.order_list is None:
+    with open(args.order_list) as f:
+        new_fasta_list = []
+        for line in f:
+            gotit = False
+            for i in fasta_list:
+                if line.rstrip() in i:
+                    new_fasta_list.append(i)
+                    gotit = True
+                    break
+            if not gotit:
+                sys.stdout.write(line + ' not found in input fastas.\n')
+
+    for i in fasta_list:
+        if not i in new_fasta_list:
+            sys.stderr.write('Could not place ' + i + ' appending to end of figure.\n')
+            new_fasta_list.append(i)
+    fasta_list = new_fasta_list
+
+name_dict = write_fasta_sibel(fasta_list, args.working_directory + '/input.fasta')
+if not args.genes_of_interest_blast is None:
+    gene_list = get_gene_pos(args.working_directory, args.genes_of_interest, args.skip_blast)
+else:
+    gene_list = []
+if not args.genes_of_interest_file is None:
+    gene_list2 = get_gene_file(args.genes_of_interest_file, name_dict)
+    gene_list += gene_list2
+
+run_sibel(args.working_directory + '/input.fasta', args.working_directory, args.sibelia_path, args.sibelia_mode, args.min_block_size, args.skip_sibelia)
+if not args.categorise is None:
+    cats = get_categories(args.categorise, name_dict)
+else:
+    print('ding')
+    cats = {}
+cat_set = set()
+for i in cats:
+    for j in cats[i]:
+        cat_set.add(j[2])
+gene_set = set()
+for i in gene_list:
+    gene_set.add(i[1])
+
+legend_size = max([len(gene_set)+1, len(cat_set) + 2, 20])
+
+
+block_dict, length_dict = get_blocks(args.working_directory, gene_list, cats)
+order_blocks_core(block_dict)
+out_blocks = get_noncore(block_dict, length_dict)
+noncore_pos = place_noncore(out_blocks)
+core_array, core_size = place_core(block_dict)
+draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size)
