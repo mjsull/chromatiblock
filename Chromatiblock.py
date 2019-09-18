@@ -23,7 +23,7 @@ pattern_list = ['horizontal', 'forward_diag', 'reverse_diag']
 
 class scalableVectorGraphicsHTML:
 
-    def __init__(self, height, width, svg=True):
+    def __init__(self, height, width, svg=True, texta="Chromatiblock Figure"):
         self.height = height
         self.width = width
         if svg:
@@ -32,11 +32,11 @@ class scalableVectorGraphicsHTML:
             self.out = '<!DOCTYPE html>\n' + \
     '<html>\n' + \
     '  <head>\n' + \
-    '    <script src="http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>\n' + \
+    '    <script src="svg-pan-zoom.min.js"></script>\n' + \
     '  </head>\n' + \
     '  <body>\n' + \
-    '    <h1>Chromatiblock demo</h1>\n' + \
-    '    <div id="container" style="width: 100%; height: 1500px; border:0px solid black; ">\n'
+    '    <h1>' + texta + '</h1>\n' + \
+    '    <div id="container" style="width: 100%; height: 800px; border:0px solid black; ">\n'
         self.out += '      <svg id="demo-tiger" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
 '                   max-width: inherit; height: inherit; min-height: inherit; max-height: inherit; " viewBox="0 0 %d %d" version="1.1">\n' % (width, height) + \
 '        <style>\n' + \
@@ -55,13 +55,10 @@ class scalableVectorGraphicsHTML:
     def drawLine(self, x1, y1, x2, y2, th=1, cl=(0, 0, 0)):
         self.out += '  <line x1="%d" y1="%d" x2="%d" y2="%d"\n        stroke-width="%d" stroke="%s" />\n' % (x1, y1, x2, y2, th, colorstr(cl))
 
-    def writesvg(self, filename, svg=True):
-        with open(filename, 'w') as outfile:
-            outfile.write(self.out)
-            if svg:
-                outfile.write('</g></svg>')
-            else:
-                outfile.write('''</g>      </svg>
+
+
+    def seperate_figure(self, width, height):
+        self.out += '''</g>      </svg>
     </div>
     <button id="enable">enable</button>
     <button id="disable">disable</button>
@@ -95,10 +92,20 @@ class scalableVectorGraphicsHTML:
         })
       };
     </script>
+    '''
+        self.out += '<div id="container" style="width: 50%; height: auto; border:0px solid black; ">\n'
+        self.out += ' <svg id="legend" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
+'                   max-width: inherit; height: inherit; min-height: inherit; max-height: inherit; " viewBox="0 0 %d %d" version="1.1">\n<g>' % (width, height)
 
-  </body>
-
-</html>''')
+    def writesvg(self, filename, svg=True, textb=''):
+        with open(filename, 'w') as outfile:
+            outfile.write(self.out)
+            if svg:
+                outfile.write('</g></svg>')
+            else:
+                outfile.write('</div></g>      </svg>\n<p> ')
+                outfile.write(textb)
+                outfile.write('</p>\n  </body>\n</html>')
 
     def drawRightArrow(self, x, y, wid, ht, fc, oc=(0,0,0), lt=1):
         if lt > ht /2:
@@ -786,16 +793,18 @@ def place_noncore(out_blocks):
                     placed_blocks.append((row, new_pattern, size, left_place, 'right'))
     return placed_blocks
 
-def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, color_cat=True, color_contigs=False):
+def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, color_cat=True,
+                texta="Chromatiblock figure", textb="this is a chromatiblock figure", color_contigs=False):
     noncore_max_size = [0 for i in range(len(core_blocks) + 2)]
     unattached_size = [[] for i in range(len(core_blocks[0]))]
     figure_width = 50000
     genome_height = block_height + y_gap
+    genome_line_width = block_height/8
     height = (len(core_blocks[0]) + 3 + legend_size/2) * genome_height * 2
     core_sat = 0.8
     core_light = 0.5
     if out_file.endswith('html'):
-        svg = scalableVectorGraphicsHTML(height, figure_width, False)
+        svg = scalableVectorGraphicsHTML(height, figure_width, False, texta)
     else:
         svg = scalableVectorGraphicsHTML(height, figure_width, True)
     for i in placed_blocks:
@@ -855,7 +864,7 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
             x1 = gap_pos[gap] + noncore_max_size[gap]/scale - size/scale + 2 * gap_size
             x2 = gap_pos[gap] + noncore_max_size[gap]/scale + 2 * gap_size
         y = int(row) * genome_height + block_height / 2
-        svg.drawLine(x1, y, x2, y, th=6)
+        svg.drawLine(x1, y, x2, y, th=genome_line_width)
         for j in pattern:
             start, strand, length, block, block_type, genes, cat = j
             if block in noncore_dict:
@@ -967,29 +976,82 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     svg.close_group()
     legend_start = (len(core_blocks[0]) + 3) * genome_height * 2
     font_size = genome_height * 0.7
-    if len(pattern_dict) > 0:
-        svg.writeString("Block categories", figure_width/2, legend_start+3*genome_height/4, font_size)
+    curr_y = legend_start
+    if bp < 50000:
+        scale1size = 5000
+        scale1txt = "5 Kbp"
+    elif bp <= 100000:
+        scale1size = 10000
+        scale1txt = "10 Kbp"
+    elif bp <= 500000:
+        scale1size = 50000
+        scale1txt = "50 Kbp"
+    elif bp <= 1000000:
+        scale1size = 100000
+        scale1txt = "100 Kbp"
+    elif bp <= 5000000:
+        scale1size = 500000
+        scale1txt = "500 Kbp"
+    elif bp <= 10000000:
+        scale1size = 1000000
+        scale1txt = "1 Mbp"
+    elif bp <= 50000000:
+        scale1size = 5000000
+        scale1txt = "5 Mbp"
+    else:
+        scale1size = 10000000
+        scale1txt = "10 Mbp"
+    if bp_blocks < 50000:
+        scale2size = 5000
+        scale2txt = "5 Kbp"
+    elif bp_blocks <= 100000:
+        scale2size = 10000
+        scale2txt = "10 Kbp"
+    elif bp_blocks <= 500000:
+        scale2size = 50000
+        scale2txt = "50 Kbp"
+    elif bp_blocks <= 1000000:
+        scale2size = 100000
+        scale2txt = "100 Kbp"
+    elif bp_blocks <= 5000000:
+        scale2size = 500000
+        scale2txt = "500 Kbp"
+    elif bp_blocks <= 10000000:
+        scale2size = 1000000
+        scale2txt = "1 Mbp"
+    elif bp_blocks <= 50000000:
+        scale2size = 5000000
+        scale2txt = "5 Mbp"
+    else:
+        scale2size = 10000000
+        scale2txt = "10 Mbp"
+    svg.drawLine(50, curr_y+block_height/2, 50 + scale1size / scale, curr_y+block_height/2, genome_line_width, (0, 0, 0))
+    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.drawLine(50 + scale1size / scale, curr_y, 50 + scale1size / scale, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.writeString(scale1txt + ' (panel a)', 50, curr_y + genome_height + font_size, font_size)
+    curr_y += genome_height * 2.1
+    svg.drawLine(50, curr_y + block_height/2, 50 + scale2size / scale2, curr_y+block_height/2, genome_line_width, (0, 0, 0))
+    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.drawLine(50 + scale2size / scale2, curr_y, 50 + scale2size / scale2, curr_y + block_height, genome_line_width, (0,0,0))
+    svg.writeString(scale2txt + ' (panel b)', 50, curr_y + genome_height+font_size, font_size)
+    curr_y += genome_height * 2.1
+    svg.seperate_figure(width, legend_size * genome_height)
+    if color_cat:
+        svg.writeString("Block categories", figure_width / 2, legend_start + 3 * genome_height / 4, font_size)
     for num, i in enumerate(cat_list):
-        svg.drawPatternRect(figure_width/2, legend_start + (num+1) * genome_height, figure_width/100, block_height, i, pattern_dict[i])
-        svg.writeString(i, figure_width/2 + figure_width/100, legend_start + (num+1) * genome_height + 3 * genome_height/4, font_size)
+        svg.drawPatternRect(figure_width / 2, legend_start + (num + 1) * genome_height, figure_width / 100,
+                            block_height, i, pattern_dict[i])
+        svg.writeString(i, figure_width / 2 + figure_width / 100,
+                        legend_start + (num + 1) * genome_height + 3 * genome_height / 4, font_size)
     if len(gene_dict_b) > 0:
-        svg.writeString("Genes", figure_width/4, legend_start+3*genome_height/4, font_size)
+        svg.writeString("Genes", figure_width / 4, legend_start + 3 * genome_height / 4, font_size)
     for num, i in enumerate(gene_dict_b):
         color = color_list[num % len(color_list)]
-        svg.drawSymbol(figure_width/4, legend_start + (num+1) * genome_height + block_height/2, block_height/2, color, 'd', alpha=1.0, lt=10)
-        svg.writeString(i, figure_width/4 + block_height/2, legend_start + (num+1) * genome_height + 3 * genome_height/4, font_size)
-    curr_y = legend_start
-    genome_line_width = block_height/15
-    svg.drawLine(50, curr_y+block_height/2, 50 + 100000 / scale, curr_y+block_height/2, genome_line_width, (0, 0, 0))
-    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
-    svg.drawLine(50 + 100000 / scale, curr_y, 50 + 100000 / scale, curr_y + block_height, genome_line_width, (0,0,0))
-    svg.writeString('100 Kbp (panel a)', 50, curr_y + genome_height + font_size, font_size)
-    curr_y += genome_height * 2.1
-    svg.drawLine(50, curr_y + block_height/2, 50 + 10000 / scale2, curr_y+block_height/2, genome_line_width, (0, 0, 0))
-    svg.drawLine(50, curr_y, 50, curr_y + block_height, genome_line_width, (0,0,0))
-    svg.drawLine(50 + 10000 / scale2, curr_y, 50 + 10000 / scale2, curr_y + block_height, genome_line_width, (0,0,0))
-    svg.writeString('10 Kbp (panel b)', 50, curr_y + genome_height+font_size, font_size)
-    curr_y += genome_height * 2.1
+        svg.drawSymbol(figure_width / 4, legend_start + (num + 1) * genome_height + block_height / 2, block_height / 2,
+                       color, 'd', alpha=1.0, lt=10)
+        svg.writeString(i, figure_width / 4 + block_height / 2,
+                        legend_start + (num + 1) * genome_height + 3 * genome_height / 4, font_size)
+    curr_y = 0
     svg.drawHueGradient(50, curr_y, figure_width/10, genome_height, core_sat, core_light)
     svg.writeString('start', 50, curr_y + genome_height + font_size, font_size)
     svg.writeString('Position of core block in genome', 50+figure_width/20, curr_y + genome_height + font_size, font_size, justify='middle')
@@ -1060,7 +1122,7 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
                     out_color)
     svg.writeString('Noncore region adjacent to right core block', 50, curr_y + genome_height + font_size, font_size)
     if out_file.endswith('html'):
-        svg.writesvg(out_file, False)
+        svg.writesvg(out_file, False, textb)
     else:
         svg.writesvg(out_file, True)
 
@@ -1220,4 +1282,4 @@ order_blocks_core(block_dict)
 out_blocks = get_noncore(block_dict, length_dict)
 noncore_pos = place_noncore(out_blocks)
 core_array, core_size = place_core(block_dict)
-draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size)
+draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size, args.categorise != None)
