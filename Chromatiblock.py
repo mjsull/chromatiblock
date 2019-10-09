@@ -53,7 +53,7 @@ class scalableVectorGraphicsHTML:
             self.out = '<!DOCTYPE html>\n' + \
     '<html>\n' + \
     '  <head>\n' + \
-    '    <script src="svg-pan-zoom.min.js"></script>\n' + \
+    '    <script src="http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>\n' + \
     '  </head>\n' + \
     '  <body>\n' + \
     '    <h1>' + texta + '</h1>\n' + \
@@ -1351,7 +1351,9 @@ elif not args.fasta_files is None:
 else:
     sys.exit('No input files found use -f or -d')
 
-if os.path.exists(args.working_directory) and not os.path.isdir:
+if args.working_directory is None:
+    sys.exit("Please specify a working directory.")
+elif os.path.exists(args.working_directory) and not os.path.isdir:
     sys.exit("Working directory exists (and is a file)")
 elif not os.path.exists(args.working_directory):
     os.makedirs(args.working_directory)

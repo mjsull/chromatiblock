@@ -22,11 +22,11 @@ Sibelia
 ncbi-blast+
 
 ### Example usage: 
-`python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg` 
+`python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
 
 or
      
-`python Chromatiblock.py -d /path/to/fasta_directory/ -o image.svg`
+`python Chromatiblock.py -d /path/to/fasta_directory/ -w cb_working_dir -o image.svg`
 
 
 # Example output:
@@ -37,8 +37,17 @@ Chromatiblock outputs two figures. The first figure (top) shows the topology of 
 
 The second figure (bottom) shows the presence and absence of non-core colinear blocks. Non-core colinear blocks are enlarged and aligned on top of one another. Absence of a block indicates absence in the respective genome.
 
+A HTML example can be found [here](https://mjsull.github.com/Chromatiblock)
 
 
+# Demo:
+Example files can be found [here](https://github.com/mjsull/chromatiblock/releases/download/0.3.0/chromatiblock_example.zip)
+
+To run: extract files to your current directory and then use the command
+
+`Chromatiblock.py -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
+
+Then open example.html with your favourite broswer.
 
 ### Arguments:
 
