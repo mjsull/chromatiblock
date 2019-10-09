@@ -1,13 +1,32 @@
+#!/usr/bin/env python3
+
+        # Chromatiblock - Scalable, whole-genome visualisation of structural changes in prokaryotes
+        # Copyright (C) 2019 Mitchell J Sullivan
+        #
+        # This program is free software: you can redistribute it and/or modify
+        # it under the terms of the GNU General Public License as published by
+        # the Free Software Foundation, either version 3 of the License, or
+        # (at your option) any later version.
+        #
+        # This program is distributed in the hope that it will be useful,
+        # but WITHOUT ANY WARRANTY; without even the implied warranty of
+        # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        # GNU General Public License for more details.
+        #
+        # You should have received a copy of the GNU General Public License
+        # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+
+
 import os
 import subprocess
 import sys
 import argparse
-from itertools import groupby
-import string
-
-# write fasta files to
 
 
+
+# if given a tuple of RGB values (0-255) retrun a hex string
 def colorstr(rgb): return "#%02x%02x%02x" % (rgb[0],rgb[1],rgb[2])
 
 
@@ -15,19 +34,21 @@ color_list = [(240,163,255), (0,117,220), (153,63,0), (76,0,92), (25,25,25), (0,
               (128,128,128), (148,255,181), (143,124,0), (157,204,0), (194,0,136), (0,51,128), (255,164,5),
               (255,168,187), (66,102,0), (255,0,16), (94,241,242), (0,153,143), (224,255,102), (116,10,255),
               (153,0,0), (255,255,128), (255,255,0), (255,80,5)]
-#pattern_list = ['circ_small', 'circ_large', 'diag_small', 'diag_large', 'dots_small', 'dots_large', 'horiz_small', 'horiz_large', 'vert_small', 'vert_large', 'cross_hatch']
+
 pattern_list = ['horizontal', 'forward_diag', 'reverse_diag']
 
 
 
-
+# class for creating SVGs (or a webpage with an embedded SVG)
 class scalableVectorGraphicsHTML:
 
     def __init__(self, height, width, svg=True, texta="Chromatiblock Figure"):
         self.height = height
         self.width = width
+        heightmm = int(210 * height / width)
         if svg:
-            self.out = ''
+            self.out = '      <svg id="demo-tiger" xmlns="http://www.w3.org/2000/svg" width="210mm" height="%dmm"' % heightmm + \
+'                   viewBox="0 0 %d %d" version="1.1">\n' % (width, height) + '<g>\n'
         else:
             self.out = '<!DOCTYPE html>\n' + \
     '<html>\n' + \
@@ -36,8 +57,8 @@ class scalableVectorGraphicsHTML:
     '  </head>\n' + \
     '  <body>\n' + \
     '    <h1>' + texta + '</h1>\n' + \
-    '    <div id="container" style="width: 100%; height: 800px; border:0px solid black; ">\n'
-        self.out += '      <svg id="demo-tiger" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
+    '    <div id="container" style="width: 100%; height: 800px; border:0px solid black; ">\n' + \
+    '      <svg id="demo-tiger" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
 '                   max-width: inherit; height: inherit; min-height: inherit; max-height: inherit; " viewBox="0 0 %d %d" version="1.1">\n' % (width, height) + \
 '        <style>\n' + \
 '            .bar {\n' + \
@@ -52,6 +73,7 @@ class scalableVectorGraphicsHTML:
 '<g>\n'
 
 
+
     def drawLine(self, x1, y1, x2, y2, th=1, cl=(0, 0, 0)):
         self.out += '  <line x1="%d" y1="%d" x2="%d" y2="%d"\n        stroke-width="%d" stroke="%s" />\n' % (x1, y1, x2, y2, th, colorstr(cl))
 
@@ -60,10 +82,10 @@ class scalableVectorGraphicsHTML:
     def seperate_figure(self, width, height):
         self.out += '''</g>      </svg>
     </div>
-    <button id="enable">enable</button>
-    <button id="disable">disable</button>
-    <button id="hide">hide</button>
-    <button id="show">show</button>
+    <button id="enable">enable zoom</button>
+    <button id="disable">disable zoom</button>
+    <button id="hide">hide genes</button>
+    <button id="show">show genes</button>
 
     <script>
       // Don't use window.onLoad like this in production, because it can only listen to one function.
@@ -93,7 +115,7 @@ class scalableVectorGraphicsHTML:
       };
     </script>
     '''
-        self.out += '<div id="container" style="width: 50%; height: auto; border:0px solid black; ">\n'
+        self.out += '<div id="container" style="width: 300; height: auto; border:0px solid black; ">\n'
         self.out += ' <svg id="legend" xmlns="http://www.w3.org/2000/svg" style="display: inline; width: inherit; min-width: inherit;' + \
 '                   max-width: inherit; height: inherit; min-height: inherit; max-height: inherit; " viewBox="0 0 %d %d" version="1.1">\n<g>' % (width, height)
 
@@ -364,9 +386,7 @@ class scalableVectorGraphicsHTML:
             sys.stderr.write('Symbol not found, this should not happen.. exiting')
             sys.exit()
 
-    def writeString(self, thestring, x, y, size, ital=False, bold=False, rotate=0, justify='left'):
-        if rotate != 0:
-            x, y = y, x
+    def writeString(self, thestring, x, y, size, justify='left'):
         self.out += '  <text\n'
         self.out += '    style="font-size:%dpx;font-style:normal;font-weight:normal;z-index:10\
 ;line-height:125%%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"\n' % size
@@ -374,37 +394,12 @@ class scalableVectorGraphicsHTML:
             self.out += '    text-anchor="end"\n'
         elif justify == 'middle':
             self.out += '    text-anchor="middle"\n'
-        if rotate == 1:
-            self.out += '    x="-%d"\n' % x
-        else:
-            self.out += '    x="%d"\n' % x
-        if rotate == -1:
-            self.out += '    y="-%d"\n' % y
-        else:
-            self.out += '    y="%d"\n' % y
-        self.out += '    sodipodi:linespacing="125%"'
-        if rotate == -1:
-            self.out += '\n    transform="matrix(0,1,-1,0,0,0)"'
-        if rotate == 1:
-            self.out += '\n    transform="matrix(0,-1,1,0,0,0)"'
-        self.out += '><tspan\n      sodipodi:role="line"\n'
-        if rotate == 1:
-            self.out += '      x="-%d"\n' % x
-        else:
-            self.out += '      x="%d"\n' % x
-        if rotate == -1:
-            self.out += '      y="-%d"' % y
-        else:
-            self.out += '      y="%d"' % y
-        if ital and bold:
-            self.out += '\nstyle="font-style:italic;font-weight:bold"'
-        elif ital:
-            self.out += '\nstyle="font-style:italic"'
-        elif bold:
-            self.out += '\nstyle="font-style:normal;font-weight:bold"'
-        self.out += '>' + thestring + '</tspan></text>\n'
+        self.out += '    x="%d"\n' % x
+        self.out += '    y="%d"\n' % y
+        self.out += '    linespacing="125%"'
+        self.out += '>' + thestring + '</text>\n'
 
-
+# convert HSL value to RGB
 def hsl_to_rgb(h, s, l):
     c = (1 - abs(2*l - 1)) * s
     x = c * (1 - abs(h *1.0 / 60 % 2 - 1))
@@ -429,35 +424,51 @@ def hsl_to_rgb(h, s, l):
 
 
 
-
+# take FASTA input and prepare it for SIELIA
 def write_fasta_sibel(fasta_list, out_fasta):
     getfa = False
     getgb = False
     out_dict = {}
+    length_dict = {}
+    entry_names = set()
     with open(out_fasta, 'w') as out:
         for num, fasta in enumerate(fasta_list):
+            length_dict[str(num)] = {}
             with open(fasta) as f:
                 count = 0
                 for line in f:
                     if line.startswith('>'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
+                        zename = line.split()[0][1:]
+                        if zename in entry_names:
+                            sys.exit('fasta entry duplicated')
+                        else:
+                            entry_names.add(zename)
                         out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), line.split()[0][1:])
+                        length_dict[str(num)][str(count)] = 0
                         count += 1
                         getfa = True
                     elif getfa:
                         out.write(line)
+                        length_dict[str(num)][str(count-1)] += len(line.rstrip())
                     elif line.startswith('LOCUS '):
                         name = line.split()[1]
+                        if name in entry_names:
+                            sys.exit('fasta entry duplicated')
+                        else:
+                            entry_names.add(name)
                     elif line.startswith('ORIGIN'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
                         out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), name)
+                        length_dict[str(num)][str(count)] = 0
                         count += 1
                         getgb = True
                     elif line.startswith('//'):
                         getgb = False
                     elif getgb:
                         out.write(''.join(line.split()[1:]) + '\n')
-    return out_dict
+                        length_dict[str(num)][str(count-1)] += len(''.join(line.split()[1:]))
+    return out_dict, length_dict
 
 
 # run sibelia
@@ -466,25 +477,105 @@ def run_sibel(in_fasta, sibel_dir, sibelia_path, sib_mode, min_block, skip_sibel
         subprocess.Popen(sibelia_path + ' -s ' + sib_mode + ' -m ' + str(min_block) + ' -o ' + sibel_dir + ' ' + in_fasta, shell=True).wait()
 
 
-
+# class for block objects produced by Sibelia or found in MAF file
 class block_object:
-    def __init__(self, start, strand, length, block, genes, cat):
+    def __init__(self, start, strand, length, block, genes, cat, type=None):
         self.start = start
         self.strand = strand
         self.length = length
         self.block = block
         self.genes = genes
-        self.type = None
+        self.type = type
         self.cat = cat
 
 
+# get colinear blocks from a MAF
+def get_blocks_maf(maf_file, name_dict, gene_list, min_block_size, cats={}):
+    header_dict = {}
+    fasta_count = set()
+    for i in name_dict:
+        fasta_count.add(name_dict[i][0])
+        header_dict[name_dict[i][1]] = i.split('_')
+    fasta_count = len(fasta_count)
+    block_dict = {}
+    block_count = 0
+    get_block = False
+    with open(maf_file) as f:
+        for line in f:
+            if len(line.split()) > 0 and line.split()[0] == 'a':
+                get_block = True
+                fastaset = set()
+                alignments = []
+                block_count += 1
+                repeat = False
+                maxsize = 0
+            elif line.rstrip() == '' and get_block:
+                get_block = False
+                if maxsize < min_block_size:
+                    continue
+                if repeat:
+                    block_type = 'repeat'
+                elif len(fastaset) == fasta_count:
+                    block_type = 'core'
+                else:
+                    block_type = 'noncore'
+                for i in alignments:
+                    fasta, contig, start, end, strand = i
+                    genes = []
+                    for j in gene_list:
+                        if fasta + '_' + contig == j[0] and start <= j[2] <= end:
+                            genes.append([j[1], j[2] - start])
+                    cat = 'none'
+                    if fasta + '_' + contig in cats:
+                        for q in cats[fasta + '_' + contig]:
+                            if q[0] == 'all':
+                                cat = q[2]
+                            elif q[0] <= start <= end <= q[1]:
+                                cat = q[2]
+                            elif start <= q[0] <= q[1] <= end:
+                                if (q[1] - q[0]) / (end - start) >= 0.5:
+                                    cat = q[2]
+                            elif start <= q[0] <= end:
+                                if (end - q[0]) / (end - start) >= 0.5:
+                                    cat = q[2]
+                            elif start <= q[1] <= end:
+                                if (q[1] - start) / (end - start) >= 0.5:
+                                    cat = q[2]
+                    if not fasta in block_dict:
+                        block_dict[fasta] = {}
+                    if not contig in block_dict[fasta]:
+                        block_dict[fasta][contig] = []
+                    block_dict[fasta][contig].append(block_object(start, strand, end - start, str(block_count), genes, cat, block_type))
+            elif line.rstrip() == '':
+                pass
+            elif line.split()[0] == 's' and get_block:
+                header, start, length, strand = line.split()[1:5]
+                start, length = int(start), int(length)
+                if length > maxsize:
+                    maxsize = length
+                if header in header_dict:
+                    fasta, contig = header_dict[header]
+                elif '.'.join(header.split('.')[1:]) in header_dict:
+                    fasta, contig = header_dict['.'.join(header.split('.')[1:])]
+                else:
+                    sys.exit("Chromatiblock does not understand how the header in the MAF relates to the header in the FASTAs, please file a bug report.")
+                if fasta in fastaset:
+                    repeat = True
+                fastaset.add(fasta)
+                if strand == '+':
+                    end = start + length
+                else:
+                    end = start - length
+                    start, end = end, start
+                alignments.append((fasta, contig, start, end, strand))
+    for i in block_dict:
+        for j in block_dict[i]:
+            block_dict[i][j].sort(key=lambda x: x.start)
+    return(block_dict)
 
-#def get_blocks_maf(maf_file, gene_list, cats={}):
-    
-
+# get blocks from Sibelia output
 def get_blocks(sibel_dir, gene_list, cats={}):
     seq_no_dict = {}
-    length_dict = {}
     block_dict = {}
     block_type = {}
     with open(sibel_dir + '/blocks_coords.txt') as f:
@@ -503,10 +594,8 @@ def get_blocks(sibel_dir, gene_list, cats={}):
             elif get_seq_ids:
                 seq_id, length, header = line.split()
                 fasta, contig = header.split('_')
-                if not fasta in length_dict:
-                    length_dict[fasta] = {}
+                if not fasta in block_dict:
                     block_dict[fasta] = {}
-                length_dict[fasta][contig] = int(length)
                 block_dict[fasta][contig] = []
                 seq_no_dict[seq_id] = (fasta, contig)
             elif line.startswith('Seq_id'):
@@ -553,8 +642,10 @@ def get_blocks(sibel_dir, gene_list, cats={}):
             block_dict[i][j].sort(key=lambda x: x.start)
             for k in block_dict[i][j]:
                 k.type = block_type[k.block]
-    return block_dict, length_dict
+    return block_dict
 
+
+# order the core blocks
 def order_blocks_core(block_dict):
     core_order = []
     num = 0
@@ -570,7 +661,6 @@ def order_blocks_core(block_dict):
         for j in block_dict[str(i)]:
             max_len = 0
             for k in block_dict[str(i)][j]:
-                #start, strand, length, block, block_type = k
                 if k.length > max_len and k.type == 'core':
                     best_strand = k.strand
                     best_block = k.block
@@ -605,6 +695,7 @@ def order_blocks_core(block_dict):
                     color_num += 1
     return block_dict
 
+# get the noncore and unaligned regions between core blocks
 def get_noncore(block_dict, length_dict, color_contigs=False):
     core_order = []
     max_coreb_length_dict = {}
@@ -658,7 +749,7 @@ def get_noncore(block_dict, length_dict, color_contigs=False):
                 out_blocks.append((i, noncore_block, length_dict[i][j] - last_core_end_pos, positions))
     return out_blocks
 
-
+# get position for each of the core blocks
 def place_core(block_dict, color_contigs=False):
     core_order = {}
     count = 0
@@ -673,7 +764,6 @@ def place_core(block_dict, color_contigs=False):
         for j in block_dict[str(i)]:
             for k in block_dict[str(i)][j]:
                 if k.type == 'core':
-                    #start, strand, length, block, block_type, fig_pos = k
                     if color_contigs:
                         out_array[core_order[k.block]].append((k.length, j))
                     else:
@@ -682,7 +772,7 @@ def place_core(block_dict, color_contigs=False):
                         max_coreb_length[core_order[k.block]] = k.length
     return out_array, max_coreb_length
 
-
+# gets position for each of the noncore regions
 def place_noncore(out_blocks):
     placed_blocks = []
     unplaced_blocks = []
@@ -793,7 +883,9 @@ def place_noncore(out_blocks):
                     placed_blocks.append((row, new_pattern, size, left_place, 'right'))
     return placed_blocks
 
-def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, color_cat=True,
+
+# Draw the block to an SVG or html (then convert svg to pdf or png)
+def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, working_dir, ppi, color_cat=True,
                 texta="Chromatiblock figure", textb="this is a chromatiblock figure", color_contigs=False):
     noncore_max_size = [0 for i in range(len(core_blocks) + 2)]
     unattached_size = [[] for i in range(len(core_blocks[0]))]
@@ -977,49 +1069,49 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     legend_start = (len(core_blocks[0]) + 3) * genome_height * 2
     font_size = genome_height * 0.7
     curr_y = legend_start
-    if bp < 50000:
+    if bp < 100000:
         scale1size = 5000
         scale1txt = "5 Kbp"
-    elif bp <= 100000:
+    elif bp <= 500000:
         scale1size = 10000
         scale1txt = "10 Kbp"
-    elif bp <= 500000:
+    elif bp <= 1000000:
         scale1size = 50000
         scale1txt = "50 Kbp"
-    elif bp <= 1000000:
+    elif bp <= 5000000:
         scale1size = 100000
         scale1txt = "100 Kbp"
-    elif bp <= 5000000:
+    elif bp <= 10000000:
         scale1size = 500000
         scale1txt = "500 Kbp"
-    elif bp <= 10000000:
+    elif bp <= 50000000:
         scale1size = 1000000
         scale1txt = "1 Mbp"
-    elif bp <= 50000000:
+    elif bp <= 100000000:
         scale1size = 5000000
         scale1txt = "5 Mbp"
     else:
         scale1size = 10000000
         scale1txt = "10 Mbp"
-    if bp_blocks < 50000:
+    if bp_blocks < 100000:
         scale2size = 5000
         scale2txt = "5 Kbp"
-    elif bp_blocks <= 100000:
+    elif bp_blocks <= 500000:
         scale2size = 10000
         scale2txt = "10 Kbp"
-    elif bp_blocks <= 500000:
+    elif bp_blocks <= 1000000:
         scale2size = 50000
         scale2txt = "50 Kbp"
-    elif bp_blocks <= 1000000:
+    elif bp_blocks <= 5000000:
         scale2size = 100000
         scale2txt = "100 Kbp"
-    elif bp_blocks <= 5000000:
+    elif bp_blocks <= 10000000:
         scale2size = 500000
         scale2txt = "500 Kbp"
-    elif bp_blocks <= 10000000:
+    elif bp_blocks <= 50000000:
         scale2size = 1000000
         scale2txt = "1 Mbp"
-    elif bp_blocks <= 50000000:
+    elif bp_blocks <= 100000000:
         scale2size = 5000000
         scale2txt = "5 Mbp"
     else:
@@ -1035,7 +1127,10 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     svg.drawLine(50 + scale2size / scale2, curr_y, 50 + scale2size / scale2, curr_y + block_height, genome_line_width, (0,0,0))
     svg.writeString(scale2txt + ' (panel b)', 50, curr_y + genome_height+font_size, font_size)
     curr_y += genome_height * 2.1
-    svg.seperate_figure(width, legend_size * genome_height)
+    if out_file.endswith('html'):
+        svg.seperate_figure(width, legend_size * genome_height)
+        curr_y = 0
+        legend_start = 0
     if color_cat:
         svg.writeString("Block categories", figure_width / 2, legend_start + 3 * genome_height / 4, font_size)
     for num, i in enumerate(cat_list):
@@ -1051,10 +1146,11 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
                        color, 'd', alpha=1.0, lt=10)
         svg.writeString(i, figure_width / 4 + block_height / 2,
                         legend_start + (num + 1) * genome_height + 3 * genome_height / 4, font_size)
-    curr_y = 0
+    svg.writeString('Position of core block in genome', 50 + figure_width / 20, curr_y + font_size,
+                    font_size, justify='middle')
+    curr_y += font_size * 1.5
     svg.drawHueGradient(50, curr_y, figure_width/10, genome_height, core_sat, core_light)
     svg.writeString('start', 50, curr_y + genome_height + font_size, font_size)
-    svg.writeString('Position of core block in genome', 50+figure_width/20, curr_y + genome_height + font_size, font_size, justify='middle')
     svg.writeString('end', 50+figure_width/10, curr_y + genome_height + font_size, font_size, justify='right')
     curr_y += genome_height * 2.1
     color = hsl_to_rgb(0, core_sat, core_light)
@@ -1123,11 +1219,26 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     svg.writeString('Noncore region adjacent to right core block', 50, curr_y + genome_height + font_size, font_size)
     if out_file.endswith('html'):
         svg.writesvg(out_file, False, textb)
-    else:
+    elif out_file.endswith('.svg'):
         svg.writesvg(out_file, True)
+    elif out_file.endswith('.pdf') or out_file.endswith('.png'):
+        try:
+            svg.writesvg(os.path.join(working_dir, "temp.svg"))
+            import cairosvg
+            if out_file.endswith('.pdf'):
+                cairosvg.svg2pdf(url=os.path.join(working_dir, "temp.svg"), write_to=out_file, dpi=ppi)
+            elif out_file.endswith('.png'):
+                cairosvg.svg2png(url=os.path.join(working_dir, "temp.svg"), write_to=out_file, dpi=ppi)
+        except ImportError:
+            sys.exit('cairosvg not found, please install (or install chromatiblock using conda)')
+    else:
+        if os.path.exists(out_file + '.svg'):
+            sys.exit(out_file + '.svg exists. File not written.')
+        else:
+            svg.writesvg(out_file + '.svg')
 
 
-
+# use blast to assign gene positions
 def get_gene_pos(working_dir, genes_faa, skip, num_threads='8', min_ident=90, min_length=0.5):
     if not skip:
         subprocess.Popen('makeblastdb -in ' + genes_faa + ' -out ' + working_dir + '/tempdb -dbtype prot', shell=True).wait()
@@ -1149,7 +1260,7 @@ def get_gene_pos(working_dir, genes_faa, skip, num_threads='8', min_ident=90, mi
                 out_list.append((query, subject, int(qstart)))
     return out_list
 
-
+# get gene positions from a file
 def get_gene_file(gene_file, name_dict):
     with open(gene_file) as f:
         for line in f:
@@ -1159,6 +1270,7 @@ def get_gene_file(gene_file, name_dict):
                     out_list.append(i, gene, int(pos))
     return out_list
 
+# get categories from a file
 def get_categories(cat_file, name_dict):
     cats = {}
     with open(cat_file) as f:
@@ -1169,11 +1281,14 @@ def get_categories(cat_file, name_dict):
             else:
                 fasta, contig, cat = line.split()
                 start, stop = 'all', 'all'
+            name = None
             for i in name_dict:
                 if name_dict[i] == (fasta, contig):
                     name = i
                     break
-            if name in cats:
+            if name is None:
+                sys.stderr.write(fasta + ' or ' + contig + ' do not exist in alignment.\n')
+            elif name in cats:
                 cats[name].append((start, stop, cat))
             else:
                 cats[name] = [(start, stop, cat)]
@@ -1181,37 +1296,42 @@ def get_categories(cat_file, name_dict):
 
 
 
-parser = argparse.ArgumentParser(prog='Chromatiblock 0.1.0', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
+parser = argparse.ArgumentParser(prog='Chromatiblock 0.3.0', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
 Chromatiblock.py: Large scale whole genome visualisation using colinear blocks.
 
-Version: 0.1.0
+Version: 0.3.0
 License: GPLv3
 
-USAGE: python Chromatiblock.py
+USAGE: python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg 
+
+        or
+     
+       python Chromatiblock.py -d /path/to/fasta_directory/ -o image.svg
+
 
 
 
 ''', epilog="Thanks for using Chromatiblock")
 
 
-parser.add_argument('-d', '--input_directory', action='store', help='fasta file of assembled contigs, scaffolds or finished genomes.')
+parser.add_argument('-d', '--input_directory', action='store', help='Directory of fasta files to use as input.')
 parser.add_argument('-l', '--order_list', action='store', help='List of fasta files in desired order.')
 parser.add_argument('-f', '--fasta_files', nargs='+', action='store', help='List of fasta/genbank files to use as input')
 parser.add_argument('-w', '--working_directory', action='store', help='Folder to write intermediate files.')
 parser.add_argument('-s', '--sibelia_path', action='store', default='Sibelia', help='Specify path to sibelia '
                                                                 '(does not need to be set if Sibelia binary is in path).')
 parser.add_argument('-sm', '--sibelia_mode', action='store', default='loose', help='mode for running sibelia <loose|fine|far>')
-parser.add_argument('-o', '--out', action='store', help='Location to write output (options *.svg/*.html/*.png')
-parser.add_argument('-q', '--ppi', action='store', type=int, default=50, help="pixels per inch (only used for png)")
+parser.add_argument('-o', '--out', action='store', help='Location to write output (options *.svg/*.html/*.png/*.pdf) will default to svg (and add extension).')
+parser.add_argument('-q', '--ppi', action='store', type=int, default=50, help="pixels per inch (only used for png, figure width is 8 inches)")
 parser.add_argument('-m', '--min_block_size', action='store', type=int, default=1000, help='Minimum size of syntenic block.')
 parser.add_argument('-c', '--categorise', action='store', help='color blocks by category')
-parser.add_argument('-gb', '--genes_of_interest_blast', action='store', help='mark genes of interest')
-parser.add_argument('-gf', '--genes_of_interest_file', action='store', help='mark genes of interest')
+parser.add_argument('-gb', '--genes_of_interest_blast', action='store', help='mark genes of interest using BLASTx')
+parser.add_argument('-gf', '--genes_of_interest_file', action='store', help='mark genes of interest using a file')
 parser.add_argument('-gh', '--genome_height', action='store', type=int, default=280, help='Height of genome blocks')
 parser.add_argument('-vg', '--gap', action='store', type=int, default=20, help='gap between genomes')
 parser.add_argument('-ss', '--skip_sibelia', action='store_true', help="Use sibelia output already in working directory")
 parser.add_argument('-sb', '--skip_blast', action='store_true', help="use existing BLASTx file for annotation")
-
+parser.add_argument('-maf', '--maf_alignment', action='store', help="use a maf file for alignment.")
 
 args = parser.parse_args()
 
@@ -1224,13 +1344,17 @@ if not args.input_directory is None:
     for i in os.listdir(args.input_directory):
         abspath = os.path.abspath(args.input_directory + '/' + i)
         if not abspath in fasta_list:
-            if abspath.endswith('.fna') or abspath.endswith('.fa') or abspath.endswith('.fasta') or abspath.endswith('.gbk'):
+            if abspath.endswith('.fna') or abspath.endswith('.fa') or abspath.endswith('.fasta') or abspath.endswith('.gbk') or abspath.endswith('.gb'):
                 fasta_list.append(abspath)
-elif not fasta_files is None:
+elif not args.fasta_files is None:
     fasta_list = args.fasta_files
 else:
-    sys.stderr.write('No input files found use -f or -d')
-    sys.exit()
+    sys.exit('No input files found use -f or -d')
+
+if os.path.exists(args.working_directory) and not os.path.isdir:
+    sys.exit("Working directory exists (and is a file)")
+elif not os.path.exists(args.working_directory):
+    os.makedirs(args.working_directory)
 
 if not args.order_list is None:
     with open(args.order_list) as f:
@@ -1243,7 +1367,7 @@ if not args.order_list is None:
                     gotit = True
                     break
             if not gotit:
-                sys.stdout.write(line + ' not found in input fastas.\n')
+                sys.stderr.write(line + ' not found in input fastas.\n')
 
     for i in fasta_list:
         if not i in new_fasta_list:
@@ -1251,20 +1375,19 @@ if not args.order_list is None:
             new_fasta_list.append(i)
     fasta_list = new_fasta_list
 
-name_dict = write_fasta_sibel(fasta_list, args.working_directory + '/input.fasta')
+name_dict, length_dict = write_fasta_sibel(fasta_list, args.working_directory + '/input.fasta')
+
 if not args.genes_of_interest_blast is None:
-    gene_list = get_gene_pos(args.working_directory, args.genes_of_interest, args.skip_blast)
+    gene_list = get_gene_pos(args.working_directory, args.genes_of_interest_blast, args.skip_blast)
 else:
     gene_list = []
 if not args.genes_of_interest_file is None:
     gene_list2 = get_gene_file(args.genes_of_interest_file, name_dict)
     gene_list += gene_list2
 
-run_sibel(args.working_directory + '/input.fasta', args.working_directory, args.sibelia_path, args.sibelia_mode, args.min_block_size, args.skip_sibelia)
 if not args.categorise is None:
     cats = get_categories(args.categorise, name_dict)
 else:
-    print('ding')
     cats = {}
 cat_set = set()
 for i in cats:
@@ -1277,9 +1400,13 @@ for i in gene_list:
 legend_size = max([len(gene_set)+1, len(cat_set) + 2, 20])
 
 
-block_dict, length_dict = get_blocks(args.working_directory, gene_list, cats)
+if args.maf_alignment is None:
+    run_sibel(args.working_directory + '/input.fasta', args.working_directory, args.sibelia_path, args.sibelia_mode, args.min_block_size, args.skip_sibelia)
+    block_dict = get_blocks(args.working_directory, gene_list, cats)
+else:
+    block_dict = get_blocks_maf(args.maf_alignment, name_dict, gene_list, args.min_block_size, cats)
 order_blocks_core(block_dict)
 out_blocks = get_noncore(block_dict, length_dict)
 noncore_pos = place_noncore(out_blocks)
 core_array, core_size = place_core(block_dict)
-draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size, args.categorise != None)
+draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size, args.working_directory, args.ppi, args.categorise != None)
