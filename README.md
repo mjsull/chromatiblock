@@ -47,7 +47,7 @@ To run: extract files to your current directory and then use the command
 
 `Chromatiblock.py -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
 
-Then open example.html with your favourite broswer.
+Then open example.html with your favourite browser.
 
 ### Arguments:
 
