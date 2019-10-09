@@ -37,7 +37,7 @@ Chromatiblock outputs two figures. The first figure (top) shows the topology of 
 
 The second figure (bottom) shows the presence and absence of non-core colinear blocks. Non-core colinear blocks are enlarged and aligned on top of one another. Absence of a block indicates absence in the respective genome.
 
-A HTML example can be found [here](https://mjsull.github.com/Chromatiblock)
+A HTML example can be found [here](https://mjsull.github.com/chromatiblock)
 
 
 # Demo:
