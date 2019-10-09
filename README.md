@@ -12,7 +12,7 @@ conda -c bioconda install Chromatiblock
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/Chromatiblock/releases/download/0.3.0/Chromatiblock.py).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/Chromatiblock/releases/download/v0.3.0/Chromatiblock.py).
 #### requirements:
 
 cairosvg
@@ -41,7 +41,7 @@ A HTML example can be found [here](https://mjsull.github.com/Chromatiblock)
 
 
 # Demo:
-Example files can be found [here](https://github.com/mjsull/chromatiblock/releases/download/0.3.0/chromatiblock_example.zip)
+Example files can be found [here](https://github.com/mjsull/chromatiblock/releases/download/v0.3.0/chromatiblock_example.zip)
 
 To run: extract files to your current directory and then use the command
 
