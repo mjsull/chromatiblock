@@ -12,7 +12,7 @@ conda -c bioconda install Chromatiblock
 
 #### Direct download:
 
-Alternatively you can download and run the script from here
+Alternatively you can download and run the script from [here](https://github.com/mjsull/Chromatiblock/releases/download/0.3.0/Chromatiblock.py).
 #### requirements:
 
 cairosvg
@@ -92,6 +92,7 @@ pixels per inch (only used for png, figure width is 8 inches)
 **default: 50**
 
 ``-m``, ``--min_block_size <integer>``
+----
 Minimum size of syntenic block to display.
 
 **default: 1000bp**
@@ -147,7 +148,7 @@ Height of genome blocks in pixels
 
 **default: 280**
 
-``-vg``, ``--gap <int>``'
+``-vg``, ``--gap <int>``
 ----
 gap between genomes
 
