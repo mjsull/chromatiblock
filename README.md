@@ -14,12 +14,15 @@ conda -c bioconda install Chromatiblock
 
 Alternatively you can download and run the script from [here](https://github.com/mjsull/Chromatiblock/releases/download/v0.3.0/Chromatiblock.py).
 #### requirements:
+(these will be installed automatically if Chromatiblock is installed with conda)
 
-cairosvg
+While Chromatiblock will run fine without these programs, they are needed for certain tasks.
 
-Sibelia
+Sibelia - for autmoatic generation of colinear blocks
 
-ncbi-blast+
+cairosvg - for creating PNG and PDF images (svg and html supported natively) 
+
+ncbi-blast+ - for automatic annotation of genes
 
 ### Example usage: 
 `python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
