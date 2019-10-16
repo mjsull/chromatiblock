@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-        # Chromatiblock - Scalable, whole-genome visualisation of structural changes in prokaryotes
+        # chromatiblock - Scalable, whole-genome visualisation of structural changes in prokaryotes
         # Copyright (C) 2019 Mitchell J Sullivan
         #
         # This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@ pattern_list = ['horizontal', 'forward_diag', 'reverse_diag']
 # class for creating SVGs (or a webpage with an embedded SVG)
 class scalableVectorGraphicsHTML:
 
-    def __init__(self, height, width, svg=True, texta="Chromatiblock Figure"):
+    def __init__(self, height, width, svg=True, pan_zoom_location='http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js', texta="chromatiblock Figure"):
         self.height = height
         self.width = width
         heightmm = int(210 * height / width)
@@ -53,7 +53,7 @@ class scalableVectorGraphicsHTML:
             self.out = '<!DOCTYPE html>\n' + \
     '<html>\n' + \
     '  <head>\n' + \
-    '    <script src="http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>\n' + \
+    '    <script src="' + pan_zoom_location + '"></script>\n' + \
     '  </head>\n' + \
     '  <body>\n' + \
     '    <h1>' + texta + '</h1>\n' + \
@@ -439,11 +439,6 @@ def write_fasta_sibel(fasta_list, out_fasta):
                 for line in f:
                     if line.startswith('>'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
-                        zename = line.split()[0][1:]
-                        if zename in entry_names:
-                            sys.exit('fasta entry duplicated')
-                        else:
-                            entry_names.add(zename)
                         out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), line.split()[0][1:])
                         length_dict[str(num)][str(count)] = 0
                         count += 1
@@ -453,10 +448,6 @@ def write_fasta_sibel(fasta_list, out_fasta):
                         length_dict[str(num)][str(count-1)] += len(line.rstrip())
                     elif line.startswith('LOCUS '):
                         name = line.split()[1]
-                        if name in entry_names:
-                            sys.exit('fasta entry duplicated')
-                        else:
-                            entry_names.add(name)
                     elif line.startswith('ORIGIN'):
                         out.write('>' + str(num) + '_' + str(count) + '\n')
                         out_dict[str(num) + '_' + str(count)] = (os.path.basename(fasta), name)
@@ -558,7 +549,7 @@ def get_blocks_maf(maf_file, name_dict, gene_list, min_block_size, cats={}):
                 elif '.'.join(header.split('.')[1:]) in header_dict:
                     fasta, contig = header_dict['.'.join(header.split('.')[1:])]
                 else:
-                    sys.exit("Chromatiblock does not understand how the header in the MAF relates to the header in the FASTAs, please file a bug report.")
+                    sys.exit("chromatiblock does not understand how the header in the MAF relates to the header in the FASTAs, please file a bug report.")
                 if fasta in fastaset:
                     repeat = True
                 fastaset.add(fasta)
@@ -655,6 +646,8 @@ def order_blocks_core(block_dict):
                 core_order.append((k.block, k.strand))
                 k.order_num = num
                 num += 1
+    if core_order == []:
+        sys.exit("No core blocks found. No regions >1000bp were found once in all genomes. Please use more closely related genomes.")
     core_block_num = num
     for i in range(1, len(block_dict)):
         block_order_dict = {}
@@ -886,7 +879,8 @@ def place_noncore(out_blocks):
 
 # Draw the block to an SVG or html (then convert svg to pdf or png)
 def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y_gap, legend_size, working_dir, ppi, color_cat=True,
-                texta="Chromatiblock figure", textb="this is a chromatiblock figure", color_contigs=False):
+                svg_pan_zoom_location='http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js', texta="chromatiblock figure",
+                textb="this is a chromatiblock figure", color_contigs=False):
     noncore_max_size = [0 for i in range(len(core_blocks) + 2)]
     unattached_size = [[] for i in range(len(core_blocks[0]))]
     figure_width = 50000
@@ -896,7 +890,7 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     core_sat = 0.8
     core_light = 0.5
     if out_file.endswith('html'):
-        svg = scalableVectorGraphicsHTML(height, figure_width, False, texta)
+        svg = scalableVectorGraphicsHTML(height, figure_width, False, svg_pan_zoom_location, texta)
     else:
         svg = scalableVectorGraphicsHTML(height, figure_width, True)
     for i in placed_blocks:
@@ -1296,22 +1290,22 @@ def get_categories(cat_file, name_dict):
 
 
 
-parser = argparse.ArgumentParser(prog='Chromatiblock 0.3.0', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
-Chromatiblock.py: Large scale whole genome visualisation using colinear blocks.
+parser = argparse.ArgumentParser(prog='chromatiblock 0.3.1', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
+chromatiblock.py: Large scale whole genome visualisation using colinear blocks.
 
-Version: 0.3.0
+Version: 0.3.1
 License: GPLv3
 
-USAGE: python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg 
+USAGE: python chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg 
 
         or
      
-       python Chromatiblock.py -d /path/to/fasta_directory/ -o image.svg
+       python chromatiblock.py -d /path/to/fasta_directory/ -o image.svg
 
 
 
 
-''', epilog="Thanks for using Chromatiblock")
+''', epilog="Thanks for using chromatiblock")
 
 
 parser.add_argument('-d', '--input_directory', action='store', help='Directory of fasta files to use as input.')
@@ -1332,9 +1326,16 @@ parser.add_argument('-vg', '--gap', action='store', type=int, default=20, help='
 parser.add_argument('-ss', '--skip_sibelia', action='store_true', help="Use sibelia output already in working directory")
 parser.add_argument('-sb', '--skip_blast', action='store_true', help="use existing BLASTx file for annotation")
 parser.add_argument('-maf', '--maf_alignment', action='store', help="use a maf file for alignment.")
+parser.add_argument('-pz', '--svg_pan_zoom_location', action='store', default='http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js',
+                    help='location of svg-pan-zoom.min.js')
+parser.add_argument('-v', '--version', action='store_true', help="print version and exit")
 
 args = parser.parse_args()
 
+
+if args.version:
+    sys.stdout.write('Version 0.3.1')
+    sys.exit()
 
 
 
@@ -1411,4 +1412,4 @@ order_blocks_core(block_dict)
 out_blocks = get_noncore(block_dict, length_dict)
 noncore_pos = place_noncore(out_blocks)
 core_array, core_size = place_core(block_dict)
-draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size, args.working_directory, args.ppi, args.categorise != None)
+draw_blocks(core_array, noncore_pos, core_size, args.out, args.genome_height, args.gap, legend_size, args.working_directory, args.ppi, args.categorise != None, args.svg_pan_zoom_location)

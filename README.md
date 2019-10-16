@@ -1,39 +1,45 @@
-# Chromatiblock.py
+# chromatiblock.py
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
 
-### Version: 0.3.0
+### Version: 0.3.1
 
 ### License: GPLv3
 
 ### Installation via conda:
 
-conda -c bioconda install Chromatiblock
+conda -c bioconda install chromatiblock
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/Chromatiblock/releases/download/v0.3.0/Chromatiblock.py).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/releases/download/v0.3.1/chromatiblock.py).
 #### requirements:
+(these will be installed automatically if chromatiblock is installed with conda)
 
-cairosvg
+While chromatiblock will run fine without these programs, they are needed for certain tasks.
 
-Sibelia
+Sibelia - for autmoatic generation of colinear blocks
 
-ncbi-blast+
+cairosvg - for creating PNG and PDF images (svg and html supported natively) 
+
+ncbi-blast+ - for automatic annotation of genes
+
+svg-pan-zoom.min.js - by default the html output uses an online javascript library for zoom functionality,
+the -pz flag can be used to point to an offline location of svg-pan-zoom.
 
 ### Example usage: 
-`python Chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
+`python chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
 
 or
      
-`python Chromatiblock.py -d /path/to/fasta_directory/ -w cb_working_dir -o image.svg`
+`python chromatiblock.py -d /path/to/fasta_directory/ -w cb_working_dir -o image.svg`
 
 
 # Example output:
 
 ![chromatiblock](https://raw.githubusercontent.com/mjsull/chromatiblock/gh-pages/images/chromatiblock_main.gif)
 
-Chromatiblock outputs two figures. The first figure (top) shows the topology of core and noncore colinear blocks in each genome. Core co-linear blocks present in all isolate genomes are aligned vertically and shown as solid rectangles. They are colored according to the block location in each genome to highlight inversions (legend at bottom). Non-core regions, present in only a subset of genomes, are each represented with a unique striped fill pattern.
+chromatiblock outputs two figures. The first figure (top) shows the topology of core and noncore colinear blocks in each genome. Core co-linear blocks present in all isolate genomes are aligned vertically and shown as solid rectangles. They are colored according to the block location in each genome to highlight inversions (legend at bottom). Non-core regions, present in only a subset of genomes, are each represented with a unique striped fill pattern.
 
 The second figure (bottom) shows the presence and absence of non-core colinear blocks. Non-core colinear blocks are enlarged and aligned on top of one another. Absence of a block indicates absence in the respective genome.
 
@@ -45,7 +51,7 @@ Example files can be found [here](https://github.com/mjsull/chromatiblock/releas
 
 To run: extract files to your current directory and then use the command
 
-`Chromatiblock.py -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
+`chromatiblock.py -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
 
 Then open example.html with your favourite browser.
 
@@ -178,4 +184,12 @@ use existing BLASTx file for annotation (must use with -gb flag)
 use a maf file for multiple alignment instead of Sibelia. MAF files can be produced by SibeliaZ and Mugsy.
 
 
+``-pz``, ``--svg_pan_zoom_location``
+----
+Location of the svg-pan-zoom javascript library, this can be set to an offline location, or a directory relative to the html.
 
+**default: http://ariutta.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js**
+
+``-v``, ``--version``
+-----
+print version and exit.
