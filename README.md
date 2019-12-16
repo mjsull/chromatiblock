@@ -1,4 +1,4 @@
-# chromatiblock.py
+# chromatiblock
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
 
@@ -39,11 +39,11 @@ svg-pan-zoom.min.js - by default the html output uses an online javascript libra
 the -pz flag can be used to point to an offline location of svg-pan-zoom.
 
 ### Example usage: 
-`python chromatiblock.py -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
+`python chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
 
 or
      
-`python chromatiblock.py -d /path/to/fasta_directory/ -w cb_working_dir -o image.html`
+`python chromatiblock -d /path/to/fasta_directory/ -w cb_working_dir -o image.html`
 
 
 # Example output:
@@ -64,7 +64,7 @@ Example files can be found [here](https://github.com/mjsull/chromatiblock/releas
 
 To run: extract files to your current directory and then use the command
 
-`chromatiblock.py -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
+`chromatiblock -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
 
 Then open example.html with your favourite browser.
 
