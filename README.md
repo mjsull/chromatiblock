@@ -56,8 +56,9 @@ in `cb_working_dir`.
 
 [![chromatiblock](https://mjsull.github.io/chromatiblock/images/chromatiblock_main.gif)](https://mjsull.github.io/chromatiblock/C_difficile.html)
 
-An interactive HTML example can explored by clicking on the above figure.
+### An interactive HTML example can explored by clicking on the above figure.
 
+A tooltip will show block # and location when the mouse is hovered over a block. Other blocks of the same type will also be highlighted. Clicking on a block will show additional information, including the underlying sequence.
 
 
 An example of a global alignment of 28 complete C. difficile ge-nomes is shown in the above figure. 
