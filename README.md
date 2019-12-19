@@ -41,34 +41,88 @@ the -pz flag can be used to point to an offline location of svg-pan-zoom.
 ### Example usage: 
 `python chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -w cb_working_dir -o image.svg` 
 
+Will run chromatiblock on the genomeN.fasta files and create an svg image of the output. Intermediate files will be created
+in `cb_working_dir`.
+
+
 or
      
 `python chromatiblock -d /path/to/fasta_directory/ -w cb_working_dir -o image.html`
 
+Will run chromatiblock on all fasta or genbank files in `/path/to/fasta_directory/` and create an interactive webpage of the output. Intermediate files will be created
+in `cb_working_dir`.
 
 # Example output:
 
-[![chromatiblock](https://raw.githubusercontent.com/mjsull/chromatiblock/gh-pages/images/chromatiblock_main.gif)](https://mjsull.github.io/chromatiblock)
+[![chromatiblock](https://mjsull.github.io/chromatiblock/images/chromatiblock_main.gif)](https://mjsull.github.io/chromatiblock/C_difficile.html)
 
-chromatiblock outputs two figures. The first figure (top) shows the topology of core and noncore colinear blocks in each genome. Core co-linear blocks present in all isolate genomes are aligned vertically and shown as solid rectangles. They are colored according to the block location in each genome to highlight inversions (legend at bottom). Non-core regions, present in only a subset of genomes, are each represented with a unique striped fill pattern.
+An interactive HTML example can explored by clicking on the above figure.
 
-The second figure (bottom) shows the presence and absence of non-core colinear blocks. Non-core colinear blocks are enlarged and aligned on top of one another. Absence of a block indicates absence in the respective genome.
 
-An interactive HTML example can explored by clicking on the figure.
 
-In addition, an HTML version of a dozen *H. pylori* genomes is available [here.](https://mjsull.github.com/chromatiblock/H_pylori/H_pylori.html)
+An example of a global alignment of 28 complete C. difficile ge-nomes is shown in the above figure. 
+Multi-locus sequence type (MLST) of each isolate is indicated on the left.
+
+**Top)** Global alignment view. Core blocks across genomes (rows) are visualized as verti-cally aligned solid rectangles that are colored according to their position in the genome. 
+Non-core blocks are visualized as patterned rectangles, with each block represented by a unique combination of pattern and color. Finally, sequences unique to a single genome are depicted as solid black lines.  
+
+**Bottom)** Alignment difference view. Each genome is represented as a row and each non-core block is assigned a column in the order they are most commonly found in the genome.
+Presence of each non-core block is shown as a patterned rectangle in the genomes row. As non-core blocks may be present more than once, duplicates are shown by splitting the blocks according to repeat number.
+
+A large inversion can be observed in the third isolate from the top, indicated by a difference in ordering of core block colors relative to the reference. 
+Plasmids, found in 9 genomes, consist entirely of non-core and unique blocks. They are positioned on the right side of the figure. 
+The presence or absence of specific user-provided gene sequences can also be indicated by distinct gene symbols and are automatically annotated using BLASTx.
+In the example, six isolates contain a transposon carry-ing the erm(B) gene, encoding a 23S rRNA methyltransferase that confers resistance to erythromycin.
+The erm(B)gene is also present in an ST54 isolate but located on a novel transposon and inserted elsewhere in the genome.
+
+In addition, an HTML version of a dozen *H. pylori* genomes is available [here.](https://mjsull.github.com/chromatiblock/H_pylori.html)
 
 
 # Demo:
-Example files can be found [here](https://github.com/mjsull/chromatiblock/releases/download/v0.3.0/chromatiblock_example.zip)
+
+
+### Simple demo (*H. pylori*):
+
+Files to genrate the *H. pylori* example can be found [here](https://github.com/mjsull/chromatiblock/releases/download/v0.4.0/simple_demo.zip) (n.b. this dataset is a lot smaller and will run quicker).
 
 To run: extract files to your current directory and then use the command
 
-`chromatiblock -d chromatiblock_example -w cb_working_dir -o example.html -gb chromatiblock_example/toxins.faa -c chromatiblock_example/categories.tsv`
+`chromatiblock -d simple_demo -w cb_working_dir_simple -o H_pylori.html -l simple_demo/order_list.txt`
 
-Then open example.html with your favourite browser.
+**-d** - directory to look for fasta files
 
-### Arguments:
+**-w** - working directory location
+
+**-o** - output file, for an svg use .svg suffix
+
+**-l** - How to order fasta files in figure
+
+Then open H_pylori.html with your favourite browser.
+
+
+
+### Advanced demo (*C. difficile*)
+
+Files to generate the example figure can be found [here](https://github.com/mjsull/chromatiblock/releases/download/v0.4.0/advanced_demo.zip).
+
+To run: extract files to your current directory and then use the command
+
+`chromatiblock -d advanced_demo -w cb_working_dir_advanced -o C_difficile.html -l advanced_demo/order_list.txt -gb advanced_demo/toxins.faa -c advanced_demo/categories.tsv`
+
+**-d** - directory to look for fasta files
+
+**-w** - working directory location
+
+**-o** - output file, for an svg use .svg suffix
+
+**-l** - How to order fasta files in figure
+
+**-gb** - Fasta file of proteins to annotate in genome, genes will be found using BLASTx
+
+**-c** - custom colours to use for bottom panel of figure
+
+
+## Arguments:
 
 
 
@@ -205,11 +259,11 @@ Location of the svg-pan-zoom javascript library, this can be set to an offline l
 
 ``-hs``, ``--hue_start``
 -----
-Hue of start of core blocks.
+Hue of core blocks at the start of the genome.
 
 ``-he``, ``--hue_end``
 -----
-Hue at end of core blocks
+Hue of core blocks at the end of the genome.
 
 
 ``-v``, ``--version``

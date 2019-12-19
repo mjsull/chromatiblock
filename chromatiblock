@@ -1043,9 +1043,9 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
                 hue = hue_start + int(block_no * 1.0 / len(core_size) * (hue_stop - hue_start))
                 color1 = hsl_to_rgb(hue, core_sat, core_light)
                 color2 = hsl_to_rgb(hue, core_sat, core_light - 0.3)
-            svg.drawOutRect(curr_x, num2 * genome_height, width/scale, block_height, color1, color2, "block " + block.block + ':' + block.contig + ':' + str(block.start) + '..' + str(block.start + block.length), "blocks/%d.html" % pgnm)
+            svg.drawOutRect(curr_x, num2 * genome_height, width/scale, block_height, color1, color2, "block " + block.block + ':' + block.contig + ':' + str(block.start) + '..' + str(block.start + block.length), "%s_files/%d.html" % (out_file, pgnm))
             if out_file.endswith('html'):
-                svg.create_subpage("blocks/%d.html" % pgnm, block)
+                svg.create_subpage("%s_files/%d.html" % (out_file, pgnm), block)
             pgnm += 1
         curr_x += core_size[num1] / scale
     gap_pos[num1+1] = curr_x
@@ -1488,6 +1488,10 @@ elif os.path.exists(args.working_directory) and not os.path.isdir:
     sys.exit("Working directory exists (and is a file)")
 elif not os.path.exists(args.working_directory):
     os.makedirs(args.working_directory)
+
+if args.out.endswith('.html'):
+    if not os.path.exists(args.out + '_files'):
+        os.makedirs(args.out + '_files')
 
 if args.out is None:
     sys.exit("Please specify where to write image file.")
