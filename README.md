@@ -60,6 +60,7 @@ in `cb_working_dir`.
 
 A tooltip will show block # and location when the mouse is hovered over a block. Other blocks of the same type will also be highlighted. Clicking on a block will show additional information, including the underlying sequence.
 
+### Figure description
 
 An example of a global alignment of 28 complete C. difficile ge-nomes is shown in the above figure. 
 Multi-locus sequence type (MLST) of each isolate is indicated on the left.
