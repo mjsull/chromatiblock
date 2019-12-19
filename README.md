@@ -2,7 +2,7 @@
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
 
-### Version: 0.4.0
+### Version: 0.4.1
 
 ### License: GPLv3
 
@@ -20,7 +20,7 @@ Then in future to run chromatiblock you can reactivate this environemtn using ``
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/releases/download/v0.4.0/chromatiblock).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/releases/download/v0.4.1/chromatiblock).
 
 #### requirements:
 (these will be installed automatically if chromatiblock is installed with conda)

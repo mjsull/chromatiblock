@@ -1147,11 +1147,14 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
                 else:
                     gene_dict_a[k[0]] = [(x + k[1]/scale, int(row))]
                     gene_dict_b[k[0]] = [(curr_x + k[1]/scale2, curr_x -gap_size/2, int(row))]
-            svg.drawPatternRect(x, int(row) * genome_height, length/scale, block_height, id, color, "block " + block.block + ':' + block.contig + ':' + str(block.start) + '..' + str(block.start + block.length), "blocks/%d.html" % pgnm)
+            svg.drawPatternRect(x, int(row) * genome_height, length/scale, block_height, id, color, "block " +
+                                block.block + ':' + block.contig + ':' + str(block.start) + '..' + str(block.start + block.length), "%s_files/%d.html" % (out_file, pgnm))
             block_height_2 = block_height/block_count[i][row][0]
-            svg.drawPatternRect(curr_x, int(row) * genome_height + panel2_start + block_height_2 * block_count[i][row][1], length/scale2, block_height_2, id2, color2, "block " + block.block + ':' + block.contig + ':' + str(block.start) + '..' + str(block.start + block.length), "blocks/%d.html" % pgnm)
+            svg.drawPatternRect(curr_x, int(row) * genome_height + panel2_start + block_height_2 * block_count[i][row][1],
+                                length/scale2, block_height_2, id2, color2, "block " + block.block + ':' + block.contig +
+                                ':' + str(block.start) + '..' + str(block.start + block.length), "%s_files/%d.html" % (out_file, pgnm))
             if out_file.endswith('html'):
-                svg.create_subpage("blocks/%d.html" % pgnm, block)
+                svg.create_subpage("%s_files/%d.html" % (out_file, pgnm), block)
             pgnm += 1
             block_count[i][row][1] += 1
             if length/scale2 + gap_size > max_block_width:
@@ -1416,10 +1419,10 @@ def get_categories(cat_file, name_dict):
 
 
 
-parser = argparse.ArgumentParser(prog='chromatiblock 0.4.0', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
+parser = argparse.ArgumentParser(prog='chromatiblock 0.4.1', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
 chromatiblock: Large scale whole genome visualisation using colinear blocks.
 
-Version: 0.4.0
+Version: 0.4.1
 License: GPLv3
 
 USAGE: chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg 
@@ -1463,7 +1466,7 @@ args = parser.parse_args()
 
 
 if args.version:
-    sys.stdout.write('Version 0.4.0')
+    sys.stdout.write('Version 0.4.1')
     sys.exit()
 
 
