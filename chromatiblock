@@ -210,14 +210,14 @@ class scalableVectorGraphicsHTML:
         self.out += '    </linearGradient>\n</defs>\n'
         self.out += '  <rect fill="url(#MyGradient2)" stroke-width="0"\n'
         self.out += '        x="%d" y="%d" width="%d" height="%d" />\n' % (x1, y1, wid, hei)
-    def drawHueGradient(self, x1, y1, wid, hei, s, l):
+    def drawHueGradient(self, x1, y1, wid, hei, s, l, hmin=0, hmax=360):
         self.out += '  <defs>\n    <linearGradient id="HueGradient" x1="0%" y1="0%" x2="100%" y2="0%">\n'
         iterations = 20
         for i in range(iterations):
-            color = hsl_to_rgb(360/iterations * i, s, l)
+            color = hsl_to_rgb(hmin+(hmax-hmin)/iterations * i, s, l)
             colorstring = colorstr(color)
             self.out += '      <stop offset="%d%%" stop-color="%s" />\n' % (100/iterations * i, colorstring)
-            color = hsl_to_rgb(360/iterations * (i + 1), s, l)
+            color = hsl_to_rgb(hmin+(hmax-hmin)/iterations * (i+1), s, l)
             colorstring = colorstr(color)
             self.out += '      <stop offset="%d%%" stop-color="%s" />\n' % (100/iterations * (i + 1), colorstring)
         self.out += '    </linearGradient>\n</defs>\n'
@@ -1268,7 +1268,7 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     svg.writeString('Position of core block in genome', 50 + figure_width / 20, curr_y + font_size,
                     font_size, justify='middle')
     curr_y += font_size * 1.5
-    svg.drawHueGradient(50, curr_y, figure_width/10, genome_height, core_sat, core_light)
+    svg.drawHueGradient(50, curr_y, figure_width/10, genome_height, core_sat, core_light, hue_start, hue_stop)
     svg.writeString('start', 50, curr_y + genome_height + font_size, font_size)
     svg.writeString('end', 50+figure_width/10, curr_y + genome_height + font_size, font_size, justify='right')
     curr_y += genome_height * 2.1
@@ -1381,12 +1381,13 @@ def get_gene_pos(working_dir, genes_faa, skip, num_threads='8', min_ident=90, mi
 
 # get gene positions from a file
 def get_gene_file(gene_file, name_dict):
+    out_list = []
     with open(gene_file) as f:
         for line in f:
             fasta, contig, gene, pos = line.split()
             for i in name_dict:
                 if name_dict[i] == (fasta, contig):
-                    out_list.append(i, gene, int(pos))
+                    out_list.append((i, gene, int(pos)))
     return out_list
 
 # get categories from a file
