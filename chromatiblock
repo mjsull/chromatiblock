@@ -1280,7 +1280,7 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     svg.drawOutRect(50, curr_y, figure_width / 100, genome_height, color, out_color)
     color = hsl_to_rgb(200, core_sat, core_light)
     out_color = hsl_to_rgb(200, core_sat, max([core_light - 0.2, 0]))
-    svg.drawOutRect(figure_width / 100 + 50 + gap, curr_y, figure_width / 200, genome_height, color, out_color)
+    svg.drawOutRect(figure_width / 100 + 50 + gap_size, curr_y, figure_width / 200, genome_height, color, out_color)
     svg.writeString('Core blocks', 50, curr_y + genome_height + font_size, font_size)
     curr_y += genome_height * 2.1
     color = color_list[12]
@@ -1290,11 +1290,11 @@ def draw_blocks(core_blocks, placed_blocks, core_size, out_file, block_height, y
     color = color_list[13]
     pattern = pattern_list[1]
     svg.create_pattern('leg2', color, pattern, 50, 50)
-    svg.drawPatternRect(figure_width/100 + 50 +gap, curr_y, figure_width/200, genome_height, 'leg2', color, 1)
+    svg.drawPatternRect(figure_width/100 + 50 +gap_size, curr_y, figure_width/200, genome_height, 'leg2', color, 1)
     svg.writeString('Non-core blocks', 50, curr_y + genome_height + font_size, font_size)
     curr_y += genome_height * 2.1
     svg.drawLine(50, curr_y + genome_height/2, figure_width/100, curr_y + genome_height/2, genome_line_width)
-    svg.drawLine(figure_width/100 + 50 + gap, curr_y + genome_height/2, figure_width/200, curr_y + genome_height/2, genome_line_width)
+    svg.drawLine(figure_width/100 + 50 + gap_size, curr_y + genome_height/2, figure_width/200, curr_y + genome_height/2, genome_line_width)
     svg.writeString('Unaligned sequence', 50, curr_y + genome_height + font_size, font_size)
     curr_y += genome_height * 2.1
     color = hsl_to_rgb(0, core_sat, core_light)
