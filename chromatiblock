@@ -1419,10 +1419,10 @@ def get_categories(cat_file, name_dict):
 
 
 
-parser = argparse.ArgumentParser(prog='chromatiblock 0.4.1', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
+parser = argparse.ArgumentParser(prog='chromatiblock 0.4.2', formatter_class=argparse.RawDescriptionHelpFormatter, description='''
 chromatiblock: Large scale whole genome visualisation using colinear blocks.
 
-Version: 0.4.1
+Version: 0.4.2
 License: GPLv3
 
 USAGE: chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -o image.svg 
@@ -1466,7 +1466,7 @@ args = parser.parse_args()
 
 
 if args.version:
-    sys.stdout.write('Version 0.4.1')
+    sys.stdout.write('Version 0.4.2')
     sys.exit()
 
 
