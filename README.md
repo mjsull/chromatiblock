@@ -2,7 +2,7 @@
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
 
-### Version: 0.4.1
+### Version: 0.4.2
 
 ### License: GPLv3
 
