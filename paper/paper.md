@@ -87,7 +87,7 @@ it is placed arbitrarily next to one of the core blocks to which it is
 adjacent. This is indicated by removing the gap between core and non-core
 blocks.
 
-![Figure 1: Chromatiblock visualization of 28 Clostridium difficile genomes.
+![Chromatiblock visualization of 28 Clostridium difficile genomes.
 Multi-locus sequence type (MLST) of each isolate is indicated on the left. Top)
 Global alignment view. Core blocks across genomes (rows) are visualized as
 vertically aligned solid rectangles that are colored according to their position
