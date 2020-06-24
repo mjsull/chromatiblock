@@ -10,7 +10,7 @@ authors:
   - name: Mitchell John Sullivan
     orcid: 0000-0003-0872-7098
     affiliation: 1
-  - name: Harm van Bakel^
+  - name: Harm van Bakel
     ocid: 0000-0002-1376-6916
     affiliation: 1
 affiliations:
@@ -22,13 +22,10 @@ bibliography: paper.bib
 ---
 
 # Summary
-
-# Summary
-Chromatiblock is a Python application for visualizing the presence, absence and ar-rangement of syntenic blocks across large numbers of complete bacterial genomes.
-
-# Availability
-
-Chromatiblock is freely available under a GPL license, for macOS, GNU/Linux and and Microsoft Windows from https://github.com/mjsull/chromatiblock/
+Chromatiblock is a Python application for visualizing the presence, absence and
+arrangement of syntenic blocks across large numbers of complete bacterial genomes.
+Chromatiblock is freely available under a GPL license, for macOS, GNU/Linux and
+Microsoft Windows from https://github.com/mjsull/chromatiblock/
 
 
 # Introduction 
