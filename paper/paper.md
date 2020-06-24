@@ -85,7 +85,22 @@ and positioned between the two core blocks to which they are adjacent. In
 instances where the group cannot be placed between its two adjacent core blocks
 it is placed arbitrarily next to one of the core blocks to which it is
 adjacent. This is indicated by removing the gap between core and non-core
-blocks. An example of a global alignment of 28 complete C. difficile genomes is
+blocks.
+
+[Figure 1: Chromatiblock visualization of 28 Clostridium difficile genomes.
+Multi-locus sequence type (MLST) of each isolate is indicated on the left. Top)
+Global alignment view. Core blocks across genomes (rows) are visualized as
+vertically aligned solid rectangles that are colored according to their position
+in the genome. Non-core blocks are visualized as patterned rectangles, with each
+block represented by a unique combination of pattern and color. Finally,
+sequences unique to a single genome are depicted as solid black lines.  Bottom)
+Alignment difference view. Each genome is represented as a row and each non-core
+block is assigned a column in the order they are most commonly found in the
+genome. Presence of each non-core block is shown as a patterned rectangle in the
+genomes row. As non-core blocks may be present more than once, duplicates are
+shown by splitting the blocks according to repeat number.](https://raw.githubusercontent.com/mjsull/chromatiblock/master/paper/chromatiblock_figure.png)
+
+An example of a global alignment of 28 complete C. difficile genomes is
 shown in Fig. 1A. A large inversion can be observed in the third isolate from
 the top, indicated by a difference in ordering of core block colors relative to
 the reference. Plasmids, found in 9 genomes, consist entirely of non-core and
@@ -109,18 +124,6 @@ to quickly and easily create publication-quality figures showing structural
 changes and genetic diversity at the whole genome level.
 
 
-[Figure 1: Chromatiblock visualization of 28 Clostridium difficile genomes.
-Multi-locus sequence type (MLST) of each isolate is indicated on the left. Top)
-Global alignment view. Core blocks across genomes (rows) are visualized as
-vertically aligned solid rectangles that are colored according to their position
-in the genome. Non-core blocks are visualized as patterned rectangles, with each
-block represented by a unique combination of pattern and color. Finally,
-sequences unique to a single genome are depicted as solid black lines.  Bottom)
-Alignment difference view. Each genome is represented as a row and each non-core
-block is assigned a column in the order they are most commonly found in the
-genome. Presence of each non-core block is shown as a patterned rectangle in the
-genomes row. As non-core blocks may be present more than once, duplicates are
-shown by splitting the blocks according to repeat number.](chromatiblock_figure.png)
 
 # Funding
 
