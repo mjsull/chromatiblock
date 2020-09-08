@@ -88,7 +88,7 @@ it is placed arbitrarily next to one of the core blocks to which it is
 adjacent. This is indicated by removing the gap between core and non-core
 blocks.
 
-![Chromatiblock visualization of 28 Clostridium difficile genomes.
+![Chromatiblock visualization of 28 *C, difficile* genomes.
 Multi-locus sequence type (MLST) of each isolate is indicated on the left. Top)
 Global alignment view. Core blocks across genomes (rows) are visualized as
 vertically aligned solid rectangles that are colored according to their position
@@ -101,7 +101,7 @@ genome. Presence of each non-core block is shown as a patterned rectangle in the
 genomes row. As non-core blocks may be present more than once, duplicates are
 shown by splitting the blocks according to repeat number.](https://raw.githubusercontent.com/mjsull/chromatiblock/master/paper/chromatiblock_figure.png)
 
-An example of a global alignment of 28 complete C. difficile genomes is
+An example of a global alignment of 28 complete *Clostridioides difficile* genomes is
 shown in Fig. 1A. A large inversion can be observed in the third isolate from
 the top, indicated by a difference in ordering of core block colors relative to
 the reference. Plasmids, found in 9 genomes, consist entirely of non-core and
@@ -118,9 +118,9 @@ blocks. Chromatiblock can use BLAST+ to categorize and color each non-core
 block based on a user-provided reference database of nucleotide or amino acid
 FASTA files. Categories can also be assigned based on the size of the contig
 in which the non-core block is found. The example in Fig 1B shows that the main
-C. difficile pathogenicity locus (PaLoc) that contains the genes encoding the
+*C. difficile* pathogenicity locus (PaLoc) that contains the genes encoding the
 TcdA enterotoxin and TcdB cytotoxin, has been lost in the ST100 isolate.
-Plasmids carried by C. difficile are very chimeric, with large regions being
+Plasmids carried by *C. difficile* are very chimeric, with large regions being
 shared, but with only the two MLST8 isolates carrying identical plasmids. In
 conclusion, Chromatiblock allows users to quickly and easily create 
 publication-quality figures showing structural changes and genetic diversity
