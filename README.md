@@ -1,7 +1,7 @@
 # chromatiblock
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
-![version](https://img.shields.io/badge/version-0.4.2-blue) ![license](https://img.shields.io/badge/license-GPLv3-green)
+![version](https://img.shields.io/badge/version-0.5.0-blue) ![license](https://img.shields.io/badge/license-GPLv3-green)
 
 ### Installation 
 
@@ -15,11 +15,11 @@ conda activate chromatiblock
 conda install chromatiblock --channel conda-forge --channel bioconda
 ```
 
-Then in future to run chromatiblock you can reactivate this environemtn using ```conda activate chromatiblock```
+Then in future to run chromatiblock you can reactivate this environment using ```conda activate chromatiblock```
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/archive/v0.4.2.zip).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/archive/v0.5.0/chromatiblock).
 
 #### requirements:
 (these will be installed automatically if chromatiblock is installed with conda)
@@ -318,3 +318,39 @@ ___
 ``-v``, ``--version``
 
 print version and exit.
+
+___
+
+``-e``, ``--extension``
+
+When -d is used for input files, chromatiblock will check against this comma seperated list to determine whether to add file to the list of input sequences.
+
+**defaul: fasta,fa,fna,gbk,gb**
+___
+
+``-of``, ``--output_format``
+
+file format to write to, if all is selected --out will be a prefix and extension will be added
+
+valid formats are html, svg, png, pdf, all
+
+all will create a svg, png and pdf
+
+___
+
+``-t``, ``--add_labels``
+
+Add the fasta names as labels. 
+
+
+___
+
+``--force``
+
+overwrite working directory and output
+
+___
+
+``--keep``
+
+keep working directory
