@@ -1,7 +1,7 @@
 # chromatiblock
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
-![version](https://img.shields.io/badge/version-0.5.0-blue) ![license](https://img.shields.io/badge/license-GPLv3-green)
+![release](https://img.shields.io/github/v/release/mjsull/chromatiblock) ![license](https://img.shields.io/badge/license-GPLv3-green)
 
 ### Installation 
 
@@ -19,7 +19,7 @@ Then in future to run chromatiblock you can reactivate this environment using ``
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/archive/v0.5.0/chromatiblock).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/archive/latest/chromatiblock).
 
 #### requirements:
 (these will be installed automatically if chromatiblock is installed with conda)
@@ -353,4 +353,4 @@ ___
 
 ``--keep``
 
-keep working directory
+keep working directory, desciption of intermediate files created by Sibelia can be found here https://github.com/bioinf/Sibelia/blob/master/SIBELIA.md

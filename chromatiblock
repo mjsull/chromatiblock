@@ -1319,11 +1319,11 @@ chromatiblock: Large scale whole genome visualisation using colinear blocks.
 
 Version: ''' + __version__ + '\n\n' + '''License: GPLv3
 
-USAGE: chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -w working_dir -o image.svg 
+USAGE: chromatiblock -f genome1.fasta genome2.fasta .... genomeN.fasta -w working_dir -o figure.html 
 
         or
      
-       chromatiblock -d /path/to/fasta_directory/ -w working_dir -o image.svg
+       chromatiblock -d /path/to/fasta_directory/ -w working_dir -o figure.svg -of svg
 
 
 
