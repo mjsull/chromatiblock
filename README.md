@@ -19,7 +19,7 @@ Then in future to run chromatiblock you can reactivate this environment using ``
 
 #### Direct download:
 
-Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/archive/latest/chromatiblock).
+Alternatively you can download and run the script from [here](https://github.com/mjsull/chromatiblock/releases/download/v0.5.1/chromatiblock).
 
 #### requirements:
 (these will be installed automatically if chromatiblock is installed with conda)
