@@ -1,7 +1,9 @@
 # chromatiblock
 
 ## Scalable, whole-genome visualisation of structural changes in prokaryotes
-![release](https://img.shields.io/github/v/release/mjsull/chromatiblock) ![license](https://img.shields.io/badge/license-GPLv3-green)
+![release](https://img.shields.io/github/v/release/mjsull/chromatiblock) ![license](https://img.shields.io/badge/license-GPLv3-green) [![DOI](https://zenodo.org/badge/97623186.svg)](https://zenodo.org/badge/latestdoi/97623186)
+
+
 
 ### Installation 
 
