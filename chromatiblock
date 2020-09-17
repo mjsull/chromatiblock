@@ -1312,10 +1312,11 @@ def get_categories(cat_file, name_dict):
                 cats[name] = [(start, stop, cat)]
     return cats
 
-__version__ = "0.5.1"
+__version__ = "1.0.0"
 
-parser = argparse.ArgumentParser(prog='chromatiblock %s' % __version__, formatter_class=argparse.RawDescriptionHelpFormatter, description='''
-chromatiblock: Large scale whole genome visualisation using colinear blocks.
+
+parser = argparse.ArgumentParser(prog='chromatiblock %s' % __version__,
+    formatter_class=argparse.RawDescriptionHelpFormatter, description='''chromatiblock: Large scale whole genome visualisation using colinear blocks.
 
 Version: ''' + __version__ + '\n\n' + '''License: GPLv3
 
