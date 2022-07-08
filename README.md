@@ -103,7 +103,7 @@ This simple example uses 12 randomly selected complete *H. pylori* genome to dem
 
 Files to generate the *H. pylori* example can be found [here](https://github.com/mjsull/chromatiblock/releases/download/v0.4.0/simple_demo.zip) (n.b. this dataset is a lot smaller and will run quicker).
 
-The expected output of this example is available [here.](https://mjsull.github.com/chromatiblock/H_pylori.html)
+The expected output of this example is available [here.](https://mjsull.github.io/chromatiblock/H_pylori.html)
 
 To run: extract files to your current directory and then use the command
 
