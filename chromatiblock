@@ -420,7 +420,7 @@ def write_fasta_sibel(fasta_list, out_fasta):
                         count += 1
                         getfa = True
                     elif getfa:
-                        out.write(line)
+                        out.write(line.rstrip() + "\n")
                         length_dict[str(num)][str(count-1)] += len(line.rstrip())
                         seq_dict[str(num)][str(count - 1)] += line.rstrip()
                     elif line.startswith('LOCUS '):
@@ -1378,7 +1378,7 @@ if not 0 <= args.hue_start <= args.hue_end <= 360:
 if not args.input_directory is None:
     fasta_list = []
     for i in os.listdir(args.input_directory):
-        abspath = os.path.abspath(args.input_directory + '/' + i)
+        abspath = os.path.abspath(os.path.join(args.input_directory + '/' + i))
         if not abspath in fasta_list:
             for j in args.extensions.split(','):
                 if abspath.endswith('.' + j):
