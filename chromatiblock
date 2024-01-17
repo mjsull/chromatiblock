@@ -637,7 +637,7 @@ def order_blocks_core(block_dict):
                 k.order_num = num
                 num += 1
     if core_order == []:
-        sys.exit("No core blocks found. No regions >1000bp were found once in all genomes. Please use more closely related genomes.")
+        sys.exit("No core blocks found. No regions greater than the minimum block size were found once in all genomes. Please use more closely related genomes.")
     core_block_num = num
     for i in range(1, len(block_dict)):
         block_order_dict = {}
